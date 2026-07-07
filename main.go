@@ -67,7 +67,6 @@ func main() {
 		}
 	}
 
-	// Jalankan Bot Companion di goroutine terpisah (opsional — skip jika BOT_TOKEN kosong)
 	botClient := bot.New(newConfig)
 	if botClient != nil {
 		bot.UserbotClient = client

@@ -22,9 +22,8 @@ import (
 	"github.com/hikari-work/userbot/utils"
 )
 
-const pageSize = 6 // 3 baris x 2 kolom
+const pageSize = 6
 
-// LogicalModule mendefinisikan modul kategori secara logis
 type LogicalModule struct {
 	ID          string
 	Name        string
@@ -47,8 +46,6 @@ func init() {
 	})
 }
 
-// menuHandler dipanggil saat user mengetik .menu (sisi userbot)
-// Userbot akan memanggil bot companion via inline query, lalu mengirimkan hasilnya ke grup.
 func menuHandler(ctx *ext.Context, update *ext.Update) error {
 	uChat := update.EffectiveChat()
 	uMsg := update.EffectiveMessage
@@ -66,7 +63,6 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	// Resolve bot peer
 	botInputPeer, err := ctx.ResolveUsername(botUsername)
 	if err != nil {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
@@ -74,16 +70,13 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	// Resolve chat peer
 	chatInputPeer, err := ctx.ResolveInputPeerById(uChat.GetID())
 	if err != nil {
 		return err
 	}
 
-	// Hapus pesan perintah .menu agar chat bersih
 	_ = ctx.DeleteMessages(uChat.GetID(), []int{uMsg.ID})
 
-	// Panggil inline query ke bot companion dengan menyertakan ChatID di query
 	results, err := ctx.Raw.MessagesGetInlineBotResults(ctx, &tg.MessagesGetInlineBotResultsRequest{
 		Bot:    botInputPeer.GetInputUser(),
 		Peer:   chatInputPeer,
@@ -98,7 +91,6 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 		return fmt.Errorf("bot tidak mengembalikan hasil inline query")
 	}
 
-	// Kirim hasil inline query ke chat
 	sentUpdates, err := ctx.Raw.MessagesSendInlineBotResult(ctx, &tg.MessagesSendInlineBotResultRequest{
 		Peer:     chatInputPeer,
 		RandomID: rand.Int63(),
@@ -109,7 +101,6 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 
-	// Dapatkan msgID dari updates response
 	var msgID int
 	switch u := sentUpdates.(type) {
 	case *tg.Updates:
@@ -128,7 +119,6 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if msgID != 0 {
-		// Simpan msgID ke Redis agar userbot bisa menghapusnya nanti
 		key := fmt.Sprintf("menu_msg:%d", uChat.GetID())
 		_ = dbClient.Redis.Set(ctx, key, msgID, 0).Err()
 	}
@@ -136,24 +126,20 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 	return nil
 }
 
-// menuInlineHandler dipanggil saat bot menerima inline query dari userbot (sisi bot)
 func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 	if !strings.HasPrefix(q.Query, "menu") {
 		return nil
 	}
 
-	// Ambil chatID dari query (format: "menu:<chatID>")
 	var chatID int64
 	parts := strings.Split(q.Query, ":")
 	if len(parts) == 2 {
 		chatID, _ = strconv.ParseInt(parts[1], 10, 64)
 	}
 
-	// Generate menu list halaman pertama (page 0)
 	text, buttons := getModulesPage(0, chatID)
 	keyboard := bot.BuildInlineKeyboard(buttons)
 
-	// Parse HTML agar bold tag <b> dan ℹ️ dirender dengan benar
 	plainText, entities := utils.ParseHTML(text)
 
 	result := &tg.InputBotInlineResult{
@@ -174,11 +160,9 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 	return bot.AnswerInlineQuery(ctx, q.QueryID, results)
 }
 
-// menuCallbackHandler dipanggil saat user menekan salah satu tombol menu (sisi bot)
 func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	payload := strings.TrimPrefix(string(q.Data), "menu:")
 
-	// Paginasi: menu:page:<page_num>:<chat_id>
 	if strings.HasPrefix(payload, "page:") {
 		parts := strings.Split(strings.TrimPrefix(payload, "page:"), ":")
 		if len(parts) < 2 {
@@ -197,7 +181,6 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 	}
 
-	// Detail Modul: menu:mod:<mod_id>:<from_page>:<chat_id>
 	if strings.HasPrefix(payload, "mod:") {
 		parts := strings.Split(strings.TrimPrefix(payload, "mod:"), ":")
 		if len(parts) < 3 {
@@ -207,7 +190,6 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		fromPageStr := parts[1]
 		chatID, _ := strconv.ParseInt(parts[2], 10, 64)
 
-		// Ambil list logical modules secara dinamis
 		logicalMods := getLogicalModules()
 		var targetMod *LogicalModule
 		for i := range logicalMods {
@@ -231,12 +213,10 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 	}
 
-	// Tutup / Close Menu: menu:close:<chat_id>
 	if strings.HasPrefix(payload, "close:") {
 		chatIDStr := strings.TrimPrefix(payload, "close:")
 		chatID, _ := strconv.ParseInt(chatIDStr, 10, 64)
 
-		// Hapus pesan menggunakan client userbot (karena userbot yang mengirim pesannya)
 		key := fmt.Sprintf("menu_msg:%d", chatID)
 		msgIDStr, err := dbClient.Redis.Get(ctx, key).Result()
 		deleted := false
@@ -249,7 +229,6 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 			}
 		}
 
-		// Jika gagal menghapus (misal ID pesan hilang dari Redis), fallback ke edit jadi titik
 		if !deleted {
 			if q.IsInline {
 				_ = bot.EditInlineBotMessage(q.InlineMessageID, ".", nil)
@@ -265,7 +244,6 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 }
 
-// getPackageName menggunakan refleksi untuk mendapatkan nama folder package dari fungsi handler
 func getPackageName(handler interface{}) string {
 	if handler == nil {
 		return ""
@@ -275,7 +253,6 @@ func getPackageName(handler interface{}) string {
 		return ""
 	}
 	funcName := runtime.FuncForPC(funcValue.Pointer()).Name()
-	// Format: github.com/hikari-work/userbot/modules/admins.init.func1
 	const modulesMarker = "modules/"
 	idx := strings.LastIndex(funcName, modulesMarker)
 	if idx != -1 {
@@ -304,7 +281,6 @@ func getPackageName(handler interface{}) string {
 	return ""
 }
 
-// getLogicalModules menghasilkan list modul logis secara otomatis dari manager.Registry
 func getLogicalModules() []LogicalModule {
 	prettyNames := map[string]string{
 		"admins":    "👮 Admins",
@@ -331,7 +307,6 @@ func getLogicalModules() []LogicalModule {
 	groups := make(map[string]*LogicalModule)
 
 	for _, mod := range manager.Registry {
-		// Abaikan modul menu itu sendiri
 		if strings.ToLower(mod.Name) == "menu" {
 			continue
 		}
@@ -364,7 +339,6 @@ func getLogicalModules() []LogicalModule {
 			groups[pkgName] = lm
 		}
 
-		// Gabungkan commands tanpa duplikasi
 		for _, cmd := range mod.Commands {
 			found := false
 			for _, c := range lm.Commands {
@@ -384,7 +358,6 @@ func getLogicalModules() []LogicalModule {
 		list = append(list, *lm)
 	}
 
-	// Urutkan secara alfabetis berdasarkan ID
 	sort.Slice(list, func(i, j int) bool {
 		return list[i].ID < list[j].ID
 	})
@@ -392,18 +365,15 @@ func getLogicalModules() []LogicalModule {
 	return list
 }
 
-// getModulesPage menghasilkan teks menu dan list tombol untuk halaman modul tertentu
 func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 	logicalMods := getLogicalModules()
 	totalModules := len(logicalMods)
 
-	// Hitung total halaman
 	totalPages := (totalModules + pageSize - 1) / pageSize
 	if totalPages == 0 {
 		totalPages = 1
 	}
 
-	// Batasi page index agar tidak out of bound (wrap around)
 	if page < 0 {
 		page = totalPages - 1
 	} else if page >= totalPages {
@@ -416,7 +386,6 @@ func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 		end = totalModules
 	}
 
-	// Grid tombol modul (2 kolom)
 	var modRows [][]bot.Button
 	var currentRow []bot.Button
 	for i := start; i < end; i++ {
@@ -436,7 +405,6 @@ func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 		modRows = append(modRows, currentRow)
 	}
 
-	// Baris tombol navigasi di bagian paling bawah
 	prevPage := page - 1
 	nextPage := page + 1
 
@@ -447,15 +415,12 @@ func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 	}
 	modRows = append(modRows, navRow)
 
-	// Format teks menu utama
 	text := fmt.Sprintf("📦 <b>Daftar Modul Userbot</b> (Hal %d/%d)\n\nSilakan pilih modul di bawah untuk melihat detail commands:", page+1, totalPages)
 
 	return text, modRows
 }
 
-// getModuleDetail menghasilkan teks detail modul dan list tombol (Back & Close)
 func getModuleDetail(mod *LogicalModule, fromPage string, chatID int64) (string, [][]bot.Button) {
-	// Ambil prefix perintah yang aktif saat ini dari Redis
 	prefix, err := dbClient.Redis.Get(context.Background(), "prefix").Result()
 	if err != nil || prefix == "" {
 		prefix = "."
@@ -473,7 +438,6 @@ func getModuleDetail(mod *LogicalModule, fromPage string, chatID int64) (string,
 	text := fmt.Sprintf("📦 <b>Modul: %s</b>\n\nℹ️ <i>%s</i>\n\n<b>Commands:</b>\n%s",
 		mod.Name, mod.Description, strings.Join(cmdList, "\n"))
 
-	// Tombol Back & Close
 	buttons := [][]bot.Button{
 		{
 			{Text: "◀️ Back", CallbackData: fmt.Sprintf("menu:page:%s:%d", fromPage, chatID)},
@@ -484,7 +448,6 @@ func getModuleDetail(mod *LogicalModule, fromPage string, chatID int64) (string,
 	return text, buttons
 }
 
-// peerToID mengkonversi PeerClass ke int64 chat ID
 func peerToID(peer tg.PeerClass) int64 {
 	if peer == nil {
 		return 0
@@ -500,7 +463,6 @@ func peerToID(peer tg.PeerClass) int64 {
 	return 0
 }
 
-// inputPeerFromID membuat InputPeer untuk fallback pesan normal
 func inputPeerFromID(chatID int64) tg.InputPeerClass {
 	if chatID > 0 {
 		return &tg.InputPeerUser{UserID: chatID}

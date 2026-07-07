@@ -15,24 +15,16 @@ import (
 	"github.com/hikari-work/userbot/config"
 )
 
-// BotClient membungkus gotd/td client yang berjalan sebagai bot
 type BotClient struct {
 	client *telegram.Client
 	api    *tg.Client
 	cfg    *config.Config
 }
 
-// Instance global agar bisa diakses dari helper (SendWithButtons, dll.)
 var instance *BotClient
-
-// BotUsername menyimpan username bot companion yang didapatkan saat auth login
 var BotUsername string
-
-// UserbotClient menyimpan instance client gotgproto dari userbot untuk aksi cross-client
 var UserbotClient *gotgproto.Client
 
-// New membuat BotClient baru dari config.
-// Mengembalikan nil dan log warning jika BOT_TOKEN kosong (opsional).
 func New(cfg *config.Config) *BotClient {
 	if cfg.BotToken == "" {
 		slog.Warn("BOT_TOKEN tidak diset — Bot Companion dinonaktifkan")
@@ -44,8 +36,6 @@ func New(cfg *config.Config) *BotClient {
 	return b
 }
 
-// Run memulai bot client, melakukan autentikasi, dan mulai menerima update.
-// Fungsi ini blocking — jalankan di goroutine terpisah.
 func (b *BotClient) Run(ctx context.Context) error {
 	handler := telegram.UpdateHandlerFunc(func(ctx context.Context, u tg.UpdatesClass) error {
 		switch upds := u.(type) {
@@ -63,7 +53,6 @@ func (b *BotClient) Run(ctx context.Context) error {
 		return nil
 	})
 
-	// Inisialisasi SQLite session storage menggunakan sessionMaker gotgproto
 	_, botSessionStorage, err := sessionMaker.NewSessionStorage(
 		context.Background(),
 		sessionMaker.SqlSession(sqlite.Open("bot_session")),
@@ -80,7 +69,6 @@ func (b *BotClient) Run(ctx context.Context) error {
 	})
 
 	return b.client.Run(ctx, func(ctx context.Context) error {
-		// Periksa apakah bot companion sudah terautentikasi (menggunakan session SQLite yang tersimpan)
 		status, err := b.client.Auth().Status(ctx)
 		if err != nil {
 			return err
@@ -107,13 +95,11 @@ func (b *BotClient) Run(ctx context.Context) error {
 		b.api = b.client.API()
 		slog.Info("✅ Bot Companion siap menerima updates")
 
-		// Block sampai context selesai
 		<-ctx.Done()
 		return ctx.Err()
 	})
 }
 
-// getInstance mengembalikan instance bot global (bisa nil jika dinonaktifkan)
 func getInstance() *BotClient {
 	return instance
 }

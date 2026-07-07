@@ -10,7 +10,6 @@ import (
 	"github.com/hikari-work/userbot/modules/manager"
 )
 
-// dispatch merouting update dari Telegram ke handler modul yang sesuai
 func dispatch(ctx context.Context, api *tg.Client, upd tg.UpdateClass) {
 	switch u := upd.(type) {
 
@@ -45,7 +44,6 @@ func dispatch(ctx context.Context, api *tg.Client, upd tg.UpdateClass) {
 	}
 }
 
-// handleInlineQuery merouting inline query ke modul yang punya InlineHandler.
 func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
 	slog.Debug("Bot: inline query diterima", "query", q.Query, "user_id", q.UserID)
 
@@ -67,7 +65,6 @@ func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
 	}
 }
 
-// handleCallbackQuery merouting callback query ke modul berdasarkan prefix data.
 func handleCallbackQuery(ctx context.Context, api *tg.Client, q *manager.CallbackQuery) {
 	data := string(q.Data)
 	slog.Debug("Bot: callback query diterima", "data", data, "is_inline", q.IsInline)

@@ -10,17 +10,13 @@ import (
 	"github.com/hikari-work/userbot/utils"
 )
 
-// Button merepresentasikan satu tombol pada inline keyboard
 type Button struct {
-	Text         string // teks yang tampil di tombol
-	CallbackData string // data yang dikirim saat tombol ditekan (max 64 byte)
-	URL          string // URL yang dibuka saat tombol ditekan
-	SwitchInline string // beralih ke inline mode dengan query ini
+	Text         string
+	CallbackData string
+	URL          string
+	SwitchInline string
 }
 
-// SendWithButtons mengirim pesan teks dengan inline keyboard via bot.
-// peer: gunakan ctx.ResolveInputPeerById(chatID) dari handler userbot.
-// rows: baris tombol, tiap row berisi beberapa Button.
 func SendWithButtons(peer tg.InputPeerClass, text string, rows [][]Button) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
@@ -44,7 +40,6 @@ func SendWithButtons(peer tg.InputPeerClass, text string, rows [][]Button) error
 	return err
 }
 
-// EditBotMessage mengedit pesan normal yang sudah dikirim bot.
 func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]Button) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
@@ -72,7 +67,6 @@ func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]But
 	return err
 }
 
-// DeleteBotMessage menghapus pesan normal (bukan inline).
 func DeleteBotMessage(peer tg.InputPeerClass, msgID int) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
@@ -95,7 +89,6 @@ func DeleteBotMessage(peer tg.InputPeerClass, msgID int) error {
 	}
 }
 
-// DeleteMessageWithUserbot menghapus pesan menggunakan akun userbot (bisa untuk inline message yang dikirim userbot)
 func DeleteMessageWithUserbot(chatID int64, msgID int) error {
 	if UserbotClient == nil {
 		return fmt.Errorf("userbot client tidak terdaftar")
@@ -122,7 +115,6 @@ func DeleteMessageWithUserbot(chatID int64, msgID int) error {
 	return err
 }
 
-// EditInlineBotMessage mengedit pesan inline yang dikirim via inline query.
 func EditInlineBotMessage(inlineMessageID tg.InputBotInlineMessageIDClass, text string, rows [][]Button) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
@@ -149,8 +141,6 @@ func EditInlineBotMessage(inlineMessageID tg.InputBotInlineMessageIDClass, text 
 	return err
 }
 
-// AnswerCallbackQuery menjawab callback query dari tombol yang ditekan user.
-// Jika showAlert true, teks ditampilkan sebagai popup alert (bukan toast kecil).
 func AnswerCallbackQuery(ctx context.Context, queryID int64, text string, showAlert bool) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
@@ -169,7 +159,6 @@ func AnswerCallbackQuery(ctx context.Context, queryID int64, text string, showAl
 	return err
 }
 
-// AnswerInlineQuery menjawab inline query dengan daftar hasil.
 func AnswerInlineQuery(ctx context.Context, queryID int64, results []tg.InputBotInlineResultClass) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
@@ -185,20 +174,15 @@ func AnswerInlineQuery(ctx context.Context, queryID int64, results []tg.InputBot
 	return err
 }
 
-// IsActive mengembalikan true jika Bot Companion aktif dan sudah terautentikasi
 func IsActive() bool {
 	b := getInstance()
 	return b != nil && b.api != nil
 }
 
-// BuildInlineKeyboard mengkonversi [][]Button ke tg.ReplyInlineMarkup
 func BuildInlineKeyboard(rows [][]Button) *tg.ReplyInlineMarkup {
 	return buildInlineKeyboard(rows)
 }
 
-// ── helpers internal ──────────────────────────────────────────────────────────
-
-// buildInlineKeyboard mengkonversi [][]Button ke tg.ReplyInlineMarkup
 func buildInlineKeyboard(rows [][]Button) *tg.ReplyInlineMarkup {
 	var tgRows []tg.KeyboardButtonRow
 	for _, row := range rows {
