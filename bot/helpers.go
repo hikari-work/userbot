@@ -58,6 +58,29 @@ func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]But
 	return err
 }
 
+// DeleteBotMessage menghapus pesan normal (bukan inline).
+func DeleteBotMessage(peer tg.InputPeerClass, msgID int) error {
+	b := getInstance()
+	if b == nil || b.api == nil {
+		return fmt.Errorf("bot companion tidak aktif")
+	}
+
+	switch p := peer.(type) {
+	case *tg.InputPeerChannel:
+		_, err := b.api.ChannelsDeleteMessages(context.Background(), &tg.ChannelsDeleteMessagesRequest{
+			Channel: &tg.InputChannel{ChannelID: p.ChannelID, AccessHash: p.AccessHash},
+			ID:      []int{msgID},
+		})
+		return err
+	default:
+		_, err := b.api.MessagesDeleteMessages(context.Background(), &tg.MessagesDeleteMessagesRequest{
+			ID:     []int{msgID},
+			Revoke: true,
+		})
+		return err
+	}
+}
+
 // EditInlineBotMessage mengedit pesan inline yang dikirim via inline query.
 func EditInlineBotMessage(inlineMessageID tg.InputBotInlineMessageIDClass, text string, rows [][]Button) error {
 	b := getInstance()

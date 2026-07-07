@@ -178,14 +178,17 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	// Tutup / Close Menu: menu:close
 	if payload == "close" {
 		if q.IsInline {
-			if err := bot.EditInlineBotMessage(q.InlineMessageID, "❌ Menu ditutup.", nil); err != nil {
+			// CATATAN API TELEGRAM: Pesan dari inline query tidak bisa dihapus dari bot API (hanya bisa diedit).
+			// Sebagai gantinya, kita edit teksnya menjadi titik '.' (atau pesan kosong) dan hapus keyboard tombolnya.
+			if err := bot.EditInlineBotMessage(q.InlineMessageID, ".", nil); err != nil {
 				return bot.AnswerCallbackQuery(ctx, q.QueryID, "Gagal menutup menu.", false)
 			}
 		} else {
+			// Jika pesan biasa, kita hapus pesannya secara total
 			chatID := peerToID(q.Peer)
 			peer := inputPeerFromID(chatID)
-			if err := bot.EditBotMessage(peer, q.MsgID, "❌ Menu ditutup.", nil); err != nil {
-				return bot.AnswerCallbackQuery(ctx, q.QueryID, "Gagal menutup menu.", false)
+			if err := bot.DeleteBotMessage(peer, q.MsgID); err != nil {
+				return bot.AnswerCallbackQuery(ctx, q.QueryID, "Gagal menghapus menu.", false)
 			}
 		}
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
