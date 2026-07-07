@@ -16,6 +16,7 @@ import (
 	"github.com/gotd/contrib/middleware/ratelimit"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/tg"
+	"github.com/hikari-work/userbot/bot"
 	"github.com/hikari-work/userbot/config"
 	dbClient "github.com/hikari-work/userbot/connection"
 	_ "github.com/hikari-work/userbot/modules"
@@ -64,6 +65,16 @@ func main() {
 		} else {
 			slog.Info("Key 'prefix' tidak ditemukan di Redis, berhasil menyetel default '.'")
 		}
+	}
+
+	// Jalankan Bot Companion di goroutine terpisah (opsional — skip jika BOT_TOKEN kosong)
+	botClient := bot.New(newConfig)
+	if botClient != nil {
+		go func() {
+			if err := botClient.Run(context.Background()); err != nil {
+				slog.Error("Bot Companion berhenti", "error", err)
+			}
+		}()
 	}
 
 	initHandlers(client)

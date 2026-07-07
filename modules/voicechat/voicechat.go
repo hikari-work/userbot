@@ -1,4 +1,3 @@
-// Package voicechat provides voice chat functionality for Telegram groups
 package voicechat
 
 import "github.com/hikari-work/userbot/modules/manager"
