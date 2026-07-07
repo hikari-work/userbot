@@ -7,15 +7,20 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"github.com/hikari-work/userbot/bot"
+	dbClient "github.com/hikari-work/userbot/connection"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
+
+const pageSize = 6 // 3 baris x 2 kolom
 
 func init() {
 	manager.Register(&manager.Module{
@@ -72,7 +77,7 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 
 	// Panggil inline query ke bot companion
 	results, err := ctx.Raw.MessagesGetInlineBotResults(ctx, &tg.MessagesGetInlineBotResultsRequest{
-		Bot:    botInputPeer.GetInputUser(), // Menggunakan GetInputUser() untuk mengembalikan tg.InputUserClass
+		Bot:    botInputPeer.GetInputUser(),
 		Peer:   chatInputPeer,
 		Query:  "menu",
 		Offset: "",
@@ -101,27 +106,15 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 		return nil
 	}
 
-	// Susun menu inline
-	keyboard := bot.BuildInlineKeyboard([][]bot.Button{
-		{
-			{Text: "🏓 Ping",       CallbackData: "menu:ping"},
-			{Text: "ℹ️ Status",    CallbackData: "menu:status"},
-		},
-		{
-			{Text: "🎵 Voice Chat", CallbackData: "menu:voice"},
-			{Text: "🔧 Admin",      CallbackData: "menu:admin"},
-		},
-		{
-			{Text: "❌ Tutup",      CallbackData: "menu:close"},
-		},
-	})
+	// Generate menu list halaman pertama (page 0)
+	text, buttons := getModulesPage(0)
+	keyboard := bot.BuildInlineKeyboard(buttons)
 
-	// Menggunakan InputBotInlineResult yang valid di MTProto
 	result := &tg.InputBotInlineResult{
 		ID:   "menu_main",
 		Type: "article",
 		SendMessage: &tg.InputBotInlineMessageText{
-			Message:     "📋 <b>Menu Utama</b>\n\nPilih salah satu menu di bawah:",
+			Message:     text,
 			ReplyMarkup: keyboard,
 			NoWebpage:   true,
 		},
@@ -138,27 +131,57 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	payload := strings.TrimPrefix(string(q.Data), "menu:")
 
-	switch payload {
-	case "ping":
-		return bot.AnswerCallbackQuery(ctx, q.QueryID, "🏓 Pong! Userbot aktif.", false)
+	// Paginasi: menu:page:<page_num>
+	if strings.HasPrefix(payload, "page:") {
+		pageNumStr := strings.TrimPrefix(payload, "page:")
+		pageNum, err := strconv.Atoi(pageNumStr)
+		if err != nil {
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Halaman tidak valid.", false)
+		}
 
-	case "status":
-		return bot.AnswerCallbackQuery(ctx, q.QueryID, "✅ Semua sistem normal.", false)
-
-	case "voice":
-		return bot.AnswerCallbackQuery(ctx, q.QueryID, "🎵 Gunakan .joinvc untuk masuk Voice Chat.", false)
-
-	case "admin":
-		return bot.AnswerCallbackQuery(ctx, q.QueryID, "🔧 Gunakan .ban / .kick / .promote di grup.", false)
-
-	case "close":
+		text, buttons := getModulesPage(pageNum)
 		if q.IsInline {
-			// Edit inline message (sumber inline query)
+			_ = bot.EditInlineBotMessage(q.InlineMessageID, text, buttons)
+		} else {
+			chatID := peerToID(q.Peer)
+			peer := inputPeerFromID(chatID)
+			_ = bot.EditBotMessage(peer, q.MsgID, text, buttons)
+		}
+		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
+	}
+
+	// Detail Modul: menu:mod:<mod_name>:<from_page>
+	if strings.HasPrefix(payload, "mod:") {
+		parts := strings.Split(strings.TrimPrefix(payload, "mod:"), ":")
+		if len(parts) < 2 {
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Detail tidak valid.", false)
+		}
+		modName := parts[0]
+		fromPageStr := parts[1]
+
+		mod, exists := manager.Registry[modName]
+		if !exists {
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Modul tidak ditemukan.", false)
+		}
+
+		text, buttons := getModuleDetail(mod, fromPageStr)
+		if q.IsInline {
+			_ = bot.EditInlineBotMessage(q.InlineMessageID, text, buttons)
+		} else {
+			chatID := peerToID(q.Peer)
+			peer := inputPeerFromID(chatID)
+			_ = bot.EditBotMessage(peer, q.MsgID, text, buttons)
+		}
+		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
+	}
+
+	// Tutup / Close Menu: menu:close
+	if payload == "close" {
+		if q.IsInline {
 			if err := bot.EditInlineBotMessage(q.InlineMessageID, "❌ Menu ditutup.", nil); err != nil {
 				return bot.AnswerCallbackQuery(ctx, q.QueryID, "Gagal menutup menu.", false)
 			}
 		} else {
-			// Fallback untuk pesan biasa jika ada
 			chatID := peerToID(q.Peer)
 			peer := inputPeerFromID(chatID)
 			if err := bot.EditBotMessage(peer, q.MsgID, "❌ Menu ditutup.", nil); err != nil {
@@ -169,6 +192,110 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	}
 
 	return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
+}
+
+// getSortedModules mengambil dan mengurutkan seluruh modul terdaftar secara alfabetis
+func getSortedModules() []*manager.Module {
+	var modules []*manager.Module
+	for _, mod := range manager.Registry {
+		modules = append(modules, mod)
+	}
+	sort.Slice(modules, func(i, j int) bool {
+		return modules[i].Name < modules[j].Name
+	})
+	return modules
+}
+
+// getModulesPage menghasilkan teks menu dan list tombol untuk halaman modul tertentu
+func getModulesPage(page int) (string, [][]bot.Button) {
+	modules := getSortedModules()
+	totalModules := len(modules)
+
+	// Hitung total halaman
+	totalPages := (totalModules + pageSize - 1) / pageSize
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	// Batasi page index agar tidak out of bound (wrap around)
+	if page < 0 {
+		page = totalPages - 1
+	} else if page >= totalPages {
+		page = 0
+	}
+
+	start := page * pageSize
+	end := start + pageSize
+	if end > totalModules {
+		end = totalModules
+	}
+
+	// Grid tombol modul (2 kolom)
+	var modRows [][]bot.Button
+	var currentRow []bot.Button
+	for i := start; i < end; i++ {
+		mod := modules[i]
+		btn := bot.Button{
+			Text:         mod.Name,
+			CallbackData: fmt.Sprintf("menu:mod:%s:%d", mod.Name, page),
+		}
+		currentRow = append(currentRow, btn)
+
+		if len(currentRow) == 2 {
+			modRows = append(modRows, currentRow)
+			currentRow = nil
+		}
+	}
+	if len(currentRow) > 0 {
+		modRows = append(modRows, currentRow)
+	}
+
+	// Baris tombol navigasi di bagian paling bawah
+	prevPage := page - 1
+	nextPage := page + 1
+
+	navRow := []bot.Button{
+		{Text: "◀️ Prev", CallbackData: fmt.Sprintf("menu:page:%d", prevPage)},
+		{Text: "❌ Close", CallbackData: "menu:close"},
+		{Text: "▶️ Next", CallbackData: fmt.Sprintf("menu:page:%d", nextPage)},
+	}
+	modRows = append(modRows, navRow)
+
+	// Format teks menu utama
+	text := fmt.Sprintf("📦 <b>Daftar Modul Userbot</b> (Hal %d/%d)\n\nSilakan pilih modul di bawah untuk melihat detail commands:", page+1, totalPages)
+
+	return text, modRows
+}
+
+// getModuleDetail menghasilkan teks detail modul dan list tombol (Back & Close)
+func getModuleDetail(mod *manager.Module, fromPage string) (string, [][]bot.Button) {
+	// Ambil prefix perintah yang aktif saat ini dari Redis
+	prefix, err := dbClient.Redis.Get(context.Background(), "prefix").Result()
+	if err != nil || prefix == "" {
+		prefix = "."
+	}
+
+	var cmdList []string
+	if len(mod.Commands) > 0 {
+		for _, cmd := range mod.Commands {
+			cmdList = append(cmdList, fmt.Sprintf("- <code>%s%s</code>", prefix, cmd))
+		}
+	} else {
+		cmdList = append(cmdList, "<i>Tidak ada direct command. Modul bekerja di latar belakang.</i>")
+	}
+
+	text := fmt.Sprintf("📦 <b>Modul: %s</b>\n\nℹ️ <i>%s</i>\n\n<b>Commands:</b>\n%s",
+		mod.Name, mod.Description, strings.Join(cmdList, "\n"))
+
+	// Tombol Back & Close
+	buttons := [][]bot.Button{
+		{
+			{Text: "◀️ Back", CallbackData: fmt.Sprintf("menu:page:%s", fromPage)},
+			{Text: "❌ Close", CallbackData: "menu:close"},
+		},
+	}
+
+	return text, buttons
 }
 
 // peerToID mengkonversi PeerClass ke int64 chat ID
