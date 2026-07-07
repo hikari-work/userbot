@@ -7,6 +7,9 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"reflect"
+	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -27,58 +30,6 @@ type LogicalModule struct {
 	Name        string
 	Description string
 	Commands    []string
-}
-
-// Daftar modul kategori logis yang akan ditampilkan di tombol menu
-var logicalModules = []LogicalModule{
-	{
-		ID:          "admins",
-		Name:        "👮 Admins",
-		Description: "Mengelola administrasi grup (ban, kick, promote, dll.)",
-		Commands:    []string{"promote", "demote", "ban", "unban", "kick", "purge", "purgeme", "cleanservice", "addblacklist", "remblacklist", "blacklist"},
-	},
-	{
-		ID:          "afk",
-		Name:        "💤 AFK",
-		Description: "Mengatur status Away From Keyboard (AFK) saat Anda tidak aktif",
-		Commands:    []string{"afk"},
-	},
-	{
-		ID:          "antiflood",
-		Name:        "🛡️ Antiflood",
-		Description: "Mengamankan grup dari spamming/flood pesan",
-		Commands:    []string{"antiflood", "setflood"},
-	},
-	{
-		ID:          "download",
-		Name:        "📥 Download",
-		Description: "Mengunduh file atau media dari link internet secara langsung",
-		Commands:    []string{"download"},
-	},
-	{
-		ID:          "ping",
-		Name:        "🏓 Ping",
-		Description: "Memeriksa kecepatan respon (latensi) userbot ke Telegram",
-		Commands:    []string{"ping"},
-	},
-	{
-		ID:          "prefix",
-		Name:        "⚙️ Prefix",
-		Description: "Mengubah prefix (simbol pemicu) untuk semua command userbot",
-		Commands:    []string{"prefix"},
-	},
-	{
-		ID:          "status",
-		Name:        "ℹ️ Status",
-		Description: "Melihat status sistem, versi, uptime, dan info sistem lainnya",
-		Commands:    []string{"status"},
-	},
-	{
-		ID:          "voice_chat",
-		Name:        "🎵 Voice Chat",
-		Description: "Mengontrol pemutaran musik/audio secara real-time di voice chat grup",
-		Commands:    []string{"joinvc", "leavevc", "play", "pause", "resume", "stop"},
-	},
 }
 
 func init() {
@@ -258,11 +209,12 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		fromPageStr := parts[1]
 		chatID, _ := strconv.ParseInt(parts[2], 10, 64)
 
-		// Cari modul kategori logis
+		// Ambil list logical modules secara dinamis
+		logicalMods := getLogicalModules()
 		var targetMod *LogicalModule
-		for i := range logicalModules {
-			if logicalModules[i].ID == modID {
-				targetMod = &logicalModules[i]
+		for i := range logicalMods {
+			if logicalMods[i].ID == modID {
+				targetMod = &logicalMods[i]
 				break
 			}
 		}
@@ -315,9 +267,137 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 }
 
+// getPackageName menggunakan refleksi untuk mendapatkan nama folder package dari fungsi handler
+func getPackageName(handler interface{}) string {
+	if handler == nil {
+		return ""
+	}
+	funcValue := reflect.ValueOf(handler)
+	if funcValue.Kind() != reflect.Func {
+		return ""
+	}
+	funcName := runtime.FuncForPC(funcValue.Pointer()).Name()
+	// Format: github.com/hikari-work/userbot/modules/admins.init.func1
+	const modulesMarker = "modules/"
+	idx := strings.LastIndex(funcName, modulesMarker)
+	if idx != -1 {
+		subPath := funcName[idx+len(modulesMarker):]
+		dotIdx := strings.Index(subPath, ".")
+		slashIdx := strings.Index(subPath, "/")
+
+		endIdx := dotIdx
+		if slashIdx != -1 && (endIdx == -1 || slashIdx < endIdx) {
+			endIdx = slashIdx
+		}
+		if endIdx != -1 {
+			return subPath[:endIdx]
+		}
+		return subPath
+	}
+
+	parts := strings.Split(funcName, "/")
+	if len(parts) > 0 {
+		lastPart := parts[len(parts)-1]
+		dotIdx := strings.Index(lastPart, ".")
+		if dotIdx >= 0 {
+			return lastPart[:dotIdx]
+		}
+	}
+	return ""
+}
+
+// getLogicalModules menghasilkan list modul logis secara otomatis dari manager.Registry
+func getLogicalModules() []LogicalModule {
+	prettyNames := map[string]string{
+		"admins":    "👮 Admins",
+		"afk":       "💤 AFK",
+		"antiflood": "🛡️ Antiflood",
+		"download":  "📥 Download",
+		"ping":      "🏓 Ping",
+		"prefix":    "⚙️ Prefix",
+		"status":    "ℹ️ Status",
+		"voicechat": "🎵 Voice Chat",
+	}
+
+	prettyDescriptions := map[string]string{
+		"admins":    "Mengelola administrasi grup (ban, kick, promote, dll.)",
+		"afk":       "Mengatur status Away From Keyboard (AFK) saat Anda tidak aktif",
+		"antiflood": "Mengamankan grup dari spamming/flood pesan",
+		"download":  "Mengunduh file atau media dari link internet secara langsung",
+		"ping":      "Memeriksa kecepatan respon (latensi) userbot ke Telegram",
+		"prefix":    "Mengubah prefix (simbol pemicu) untuk semua command userbot",
+		"status":    "Melihat status sistem, versi, uptime, dan info sistem lainnya",
+		"voicechat": "Mengontrol pemutaran musik/audio secara real-time di voice chat grup",
+	}
+
+	groups := make(map[string]*LogicalModule)
+
+	for _, mod := range manager.Registry {
+		// Abaikan modul menu itu sendiri
+		if strings.ToLower(mod.Name) == "menu" {
+			continue
+		}
+
+		pkgName := getPackageName(mod.Handler)
+		if pkgName == "" {
+			pkgName = getPackageName(mod.OnMessage)
+		}
+		if pkgName == "" {
+			pkgName = strings.ToLower(mod.Name)
+		}
+
+		lm, exists := groups[pkgName]
+		if !exists {
+			name, ok := prettyNames[pkgName]
+			if !ok {
+				name = strings.Title(pkgName)
+			}
+			desc := prettyDescriptions[pkgName]
+			if desc == "" {
+				desc = mod.Description
+			}
+
+			lm = &LogicalModule{
+				ID:          pkgName,
+				Name:        name,
+				Description: desc,
+				Commands:    []string{},
+			}
+			groups[pkgName] = lm
+		}
+
+		// Gabungkan commands tanpa duplikasi
+		for _, cmd := range mod.Commands {
+			found := false
+			for _, c := range lm.Commands {
+				if c == cmd {
+					found = true
+					break
+				}
+			}
+			if !found {
+				lm.Commands = append(lm.Commands, cmd)
+			}
+		}
+	}
+
+	var list []LogicalModule
+	for _, lm := range groups {
+		list = append(list, *lm)
+	}
+
+	// Urutkan secara alfabetis berdasarkan ID
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].ID < list[j].ID
+	})
+
+	return list
+}
+
 // getModulesPage menghasilkan teks menu dan list tombol untuk halaman modul tertentu
 func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
-	totalModules := len(logicalModules)
+	logicalMods := getLogicalModules()
+	totalModules := len(logicalMods)
 
 	// Hitung total halaman
 	totalPages := (totalModules + pageSize - 1) / pageSize
@@ -342,7 +422,7 @@ func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 	var modRows [][]bot.Button
 	var currentRow []bot.Button
 	for i := start; i < end; i++ {
-		mod := logicalModules[i]
+		mod := logicalMods[i]
 		btn := bot.Button{
 			Text:         mod.Name,
 			CallbackData: fmt.Sprintf("menu:mod:%s:%d:%d", mod.ID, page, chatID),
