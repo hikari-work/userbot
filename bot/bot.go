@@ -120,41 +120,10 @@ func (b *BotClient) Run(ctx context.Context) error {
 		b.api = b.client.API()
 		slog.Info("✅ Bot Companion berhasil terautentikasi")
 
-		// Preload entity store: ambil semua dialog yang bot sudah ikuti
-		if err := b.preloadEntities(ctx); err != nil {
-			slog.Warn("Bot: gagal preload entities", "error", err)
-		}
-
 		// Block sampai context selesai
 		<-ctx.Done()
 		return ctx.Err()
 	})
-}
-
-// preloadEntities mengambil daftar dialog sehingga entity store terisi
-// sebelum ada update pertama masuk
-func (b *BotClient) preloadEntities(ctx context.Context) error {
-	dialogs, err := b.api.MessagesGetDialogs(ctx, &tg.MessagesGetDialogsRequest{
-		Limit:      100,
-		OffsetPeer: &tg.InputPeerEmpty{},
-	})
-	if err != nil {
-		return err
-	}
-
-	switch d := dialogs.(type) {
-	case *tg.MessagesDialogs:
-		entityStore.saveChats(d.Chats)
-		entityStore.saveUsers(d.Users)
-		slog.Info("Bot: entity preload selesai",
-			"chats", len(d.Chats), "users", len(d.Users))
-	case *tg.MessagesDialogsSlice:
-		entityStore.saveChats(d.Chats)
-		entityStore.saveUsers(d.Users)
-		slog.Info("Bot: entity preload selesai",
-			"chats", len(d.Chats), "users", len(d.Users))
-	}
-	return nil
 }
 
 // getInstance mengembalikan instance bot global (bisa nil jika dinonaktifkan)
