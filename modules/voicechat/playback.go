@@ -157,6 +157,7 @@ func streamAudio(pCtx context.Context, state *State, youtubeURL string) {
 
 	// Jalankan ffmpeg, baca dari stdin (yt-dlp stdout), encode ke Opus/Ogg dan output ke stdout
 	ffmpegCmd := exec.CommandContext(pCtx, "ffmpeg",
+		"-loglevel", "error", // suppress progress stats, hanya tampilkan error
 		"-i", "pipe:0", // baca dari stdin
 		"-map", "0:a",
 		"-c:a", "libopus",
