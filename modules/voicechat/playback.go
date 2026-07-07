@@ -68,47 +68,6 @@ func PlayHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 	state.mu.Unlock()
 
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "⏳ <b>Downloading audio from YouTube...</b>")
-
-	// Generate temporary file path (use .opus extension for yt-dlp output)
-	tempFile := fmt.Sprintf("/tmp/vc-audio-%d-%d.opus", uChat.GetID(), time.Now().Unix())
-
-	// Download audio using yt-dlp
-	downloadCmd := exec.Command("yt-dlp",
-		"-f", "bestaudio",
-		"-x",
-		"--audio-format", "opus",
-		"--audio-quality", "0",
-		"-o", tempFile,
-		youtubeURL,
-	)
-	downloadCmd.Stderr = os.Stderr
-
-	if err := downloadCmd.Run(); err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to download audio:</b> %v", err))
-		return nil
-	}
-
-	// Verify file exists
-	if _, err := os.Stat(tempFile); os.IsNotExist(err) {
-		// Try with .webm extension (fallback)
-		tempFileWebm := strings.TrimSuffix(tempFile, ".opus") + ".webm"
-		if _, err := os.Stat(tempFileWebm); err == nil {
-			tempFile = tempFileWebm
-		} else {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Downloaded file not found. Expected: %s</b>", tempFile))
-			return nil
-		}
-	}
-
-	// Get video title for display
-	titleCmd := exec.Command("yt-dlp", "--get-title", youtubeURL)
-	titleOutput, _ := titleCmd.Output()
-	videoTitle := strings.TrimSpace(string(titleOutput))
-	if videoTitle == "" {
-		videoTitle = "Downloaded Audio"
-	}
-
 	state.mu.Lock()
 	if state.cancelPlay != nil {
 		state.cancelPlay()
@@ -119,24 +78,33 @@ func PlayHandler(ctx *ext.Context, update *ext.Update) error {
 	state.isPaused = false
 	state.mu.Unlock()
 
-	go playAudio(playCtx, state, tempFile)
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "🎵 <b>Starting stream...</b>")
 
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("🎵 <b>Now playing:</b> %s", html.EscapeString(videoTitle)))
+	// Fetch title asynchronously — tidak perlu nunggu download selesai
+	go func() {
+		titleCmd := exec.Command("yt-dlp", "--print", "title", "--no-warnings", youtubeURL)
+		titleOutput, _ := titleCmd.Output()
+		videoTitle := strings.TrimSpace(string(titleOutput))
+		if videoTitle == "" {
+			videoTitle = "YouTube Audio"
+		}
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("🎵 <b>Now streaming:</b> %s", html.EscapeString(videoTitle)))
+	}()
+
+	go streamAudio(playCtx, state, youtubeURL)
+
 	return nil
 }
 
-// playAudio plays audio file in the voice chat
-func playAudio(pCtx context.Context, state *State, audioFile string) {
+// streamAudio streams audio directly from YouTube via yt-dlp → ffmpeg pipe, tanpa download file dulu
+func streamAudio(pCtx context.Context, state *State, youtubeURL string) {
 	defer func() {
 		state.mu.Lock()
 		state.isPlaying = false
 		state.mu.Unlock()
-
-		// Clean up downloaded file after playback completes
-		_ = os.Remove(audioFile)
 	}()
 
-	// Wait for WebRTC connection to establish (max 30 seconds)
+	// Tunggu WebRTC connection established (max 30 detik)
 	maxWait := 30 * time.Second
 	waitStart := time.Now()
 	isConnected := false
@@ -166,31 +134,56 @@ func playAudio(pCtx context.Context, state *State, audioFile string) {
 		return
 	}
 
-	cmd := exec.Command("ffmpeg",
-		"-i", audioFile, // Input from local file
-		"-map", "0:a", // Map audio stream
-		"-c:a", "libopus", // Encode to Opus
-		"-b:a", "64k", // 64kbps bitrate
-		"-ar", "48000", // 48kHz sample rate
-		"-ac", "2", // Stereo
-		"-frame_duration", "20", // 20ms frame duration
-		"-f", "ogg", // Ogg container
-		"-page_duration", "20000", // Ogg page duration
-		"pipe:1", // Output to stdout
+	// Jalankan yt-dlp dengan output ke stdout (-o -)
+	ytdlpCmd := exec.CommandContext(pCtx, "yt-dlp",
+		"-f", "bestaudio",
+		"--no-playlist",
+		"--no-warnings",
+		"-o", "-", // output ke stdout
+		youtubeURL,
 	)
-	cmd.Stderr = os.Stderr
-	stdout, err := cmd.StdoutPipe()
+	ytdlpCmd.Stderr = os.Stderr
+
+	ytdlpOut, err := ytdlpCmd.StdoutPipe()
 	if err != nil {
 		return
 	}
-	if err := cmd.Start(); err != nil {
+	if err := ytdlpCmd.Start(); err != nil {
 		return
 	}
 	defer func() {
-		_ = cmd.Process.Kill()
+		_ = ytdlpCmd.Process.Kill()
 	}()
 
-	oggReader, _, err := CustomOggNewWith(stdout)
+	// Jalankan ffmpeg, baca dari stdin (yt-dlp stdout), encode ke Opus/Ogg dan output ke stdout
+	ffmpegCmd := exec.CommandContext(pCtx, "ffmpeg",
+		"-i", "pipe:0", // baca dari stdin
+		"-map", "0:a",
+		"-c:a", "libopus",
+		"-b:a", "64k",
+		"-ar", "48000",
+		"-ac", "2",
+		"-frame_duration", "20",
+		"-f", "ogg",
+		"-page_duration", "20000",
+		"pipe:1", // output ke stdout
+	)
+	ffmpegCmd.Stdin = ytdlpOut // pipe yt-dlp stdout → ffmpeg stdin
+	ffmpegCmd.Stderr = os.Stderr
+
+	ffmpegOut, err := ffmpegCmd.StdoutPipe()
+	if err != nil {
+		return
+	}
+	if err := ffmpegCmd.Start(); err != nil {
+		return
+	}
+	defer func() {
+		_ = ffmpegCmd.Process.Kill()
+	}()
+
+	// Baca OGG frames dari ffmpeg stdout
+	oggReader, _, err := CustomOggNewWith(ffmpegOut)
 	if err != nil {
 		return
 	}
