@@ -18,16 +18,34 @@ func dispatch(ctx context.Context, api *tg.Client, upd tg.UpdateClass) {
 		handleInlineQuery(ctx, u)
 
 	case *tg.UpdateBotCallbackQuery:
-		handleCallbackQuery(ctx, api, u)
+		q := &manager.CallbackQuery{
+			QueryID:      u.QueryID,
+			UserID:       u.UserID,
+			Data:         u.Data,
+			ChatInstance: u.ChatInstance,
+			Peer:         u.Peer,
+			MsgID:        u.MsgID,
+			IsInline:     false,
+		}
+		handleCallbackQuery(ctx, api, q)
+
+	case *tg.UpdateInlineBotCallbackQuery:
+		q := &manager.CallbackQuery{
+			QueryID:         u.QueryID,
+			UserID:          u.UserID,
+			Data:            u.Data,
+			ChatInstance:    u.ChatInstance,
+			InlineMessageID: u.MsgID,
+			IsInline:        true,
+		}
+		handleCallbackQuery(ctx, api, q)
 
 	case *tg.UpdateBotInlineSend:
-		// Opsional: tracking hasil inline yang dipilih user
 		slog.Debug("Bot: inline result dipilih", "result_id", u.ID)
 	}
 }
 
 // handleInlineQuery merouting inline query ke modul yang punya InlineHandler.
-// Semua modul dengan InlineHandler akan dipanggil (bisa difilter per query prefix).
 func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
 	slog.Debug("Bot: inline query diterima", "query", q.Query, "user_id", q.UserID)
 
@@ -41,7 +59,7 @@ func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
 			continue
 		}
 		handled = true
-		break // modul pertama yang handle dianggap cukup
+		break
 	}
 
 	if !handled {
@@ -50,12 +68,10 @@ func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
 }
 
 // handleCallbackQuery merouting callback query ke modul berdasarkan prefix data.
-// Format callback data: "<prefix>:<payload>", contoh: "menu:ping", "admin:ban:12345"
-func handleCallbackQuery(ctx context.Context, api *tg.Client, q *tg.UpdateBotCallbackQuery) {
+func handleCallbackQuery(ctx context.Context, api *tg.Client, q *manager.CallbackQuery) {
 	data := string(q.Data)
-	slog.Debug("Bot: callback query diterima", "data", data)
+	slog.Debug("Bot: callback query diterima", "data", data, "is_inline", q.IsInline)
 
-	// Cari prefix dari data: ambil bagian sebelum ":"
 	prefix := data
 	if idx := strings.Index(data, ":"); idx >= 0 {
 		prefix = data[:idx]
@@ -78,7 +94,6 @@ func handleCallbackQuery(ctx context.Context, api *tg.Client, q *tg.UpdateBotCal
 		return
 	}
 
-	// Tidak ada modul yang menangani — jawab kosong agar loading di client berhenti
 	slog.Warn("Bot: tidak ada modul yang handle callback", "data", data)
 	if b := getInstance(); b != nil && b.api != nil {
 		_, _ = b.api.MessagesSetBotCallbackAnswer(ctx, &tg.MessagesSetBotCallbackAnswerRequest{

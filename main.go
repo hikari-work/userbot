@@ -31,7 +31,7 @@ func init() {
 
 func main() {
 
-	logger, _ := zap.NewDevelopment()
+	logger, _ := zap.NewProduction()
 	rateLimiter := ratelimit.New(rate.Every(time.Millisecond*100), 30)
 	newConfig := config.NewConfig()
 	client, err := gotgproto.NewClient(

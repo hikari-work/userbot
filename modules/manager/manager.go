@@ -13,8 +13,20 @@ type ModuleHandler func(ctx *ext.Context, update *ext.Update) error
 // InlineQueryHandler adalah handler untuk inline query (@bot <query>)
 type InlineQueryHandler func(ctx context.Context, query *tg.UpdateBotInlineQuery) error
 
+// CallbackQuery merepresentasikan callback query yang disatukan (dari normal / inline message)
+type CallbackQuery struct {
+	QueryID         int64
+	UserID          int64
+	Data            []byte
+	ChatInstance    int64
+	Peer            tg.PeerClass
+	MsgID           int
+	InlineMessageID tg.InputBotInlineMessageIDClass
+	IsInline        bool
+}
+
 // CallbackQueryHandler adalah handler untuk callback query (tombol ditekan)
-type CallbackQueryHandler func(ctx context.Context, query *tg.UpdateBotCallbackQuery) error
+type CallbackQueryHandler func(ctx context.Context, query *CallbackQuery) error
 
 type Module struct {
 	Name        string
@@ -27,8 +39,6 @@ type Module struct {
 	OnMessage ModuleHandler
 
 	// Bot companion handlers
-	// CallbackPrefix adalah prefix callback data yang dimiliki modul ini (misal "menu")
-	// dispatcher akan routing callback "menu:ping" ke modul yang punya prefix "menu"
 	CallbackPrefix  string
 	CallbackHandler CallbackQueryHandler
 

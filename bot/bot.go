@@ -22,6 +22,9 @@ type BotClient struct {
 // Instance global agar bisa diakses dari helper (SendWithButtons, dll.)
 var instance *BotClient
 
+// BotUsername menyimpan username bot companion yang didapatkan saat auth login
+var BotUsername string
+
 // New membuat BotClient baru dari config.
 // Mengembalikan nil dan log warning jika BOT_TOKEN kosong (opsional).
 func New(cfg *config.Config) *BotClient {
@@ -38,7 +41,6 @@ func New(cfg *config.Config) *BotClient {
 // Run memulai bot client, melakukan autentikasi, dan mulai menerima update.
 // Fungsi ini blocking — jalankan di goroutine terpisah.
 func (b *BotClient) Run(ctx context.Context) error {
-	// UpdateHandler menerima push update dari gotd/td secara real-time
 	handler := telegram.UpdateHandlerFunc(func(ctx context.Context, u tg.UpdatesClass) error {
 		switch upds := u.(type) {
 		case *tg.Updates:
@@ -61,12 +63,18 @@ func (b *BotClient) Run(ctx context.Context) error {
 
 	return b.client.Run(ctx, func(ctx context.Context) error {
 		// Autentikasi sebagai bot menggunakan token
-		if _, err := b.client.Auth().Bot(ctx, b.cfg.BotToken); err != nil {
+		auth, err := b.client.Auth().Bot(ctx, b.cfg.BotToken)
+		if err != nil {
 			return err
 		}
 
 		b.api = b.client.API()
 		slog.Info("✅ Bot Companion berhasil terautentikasi")
+
+		if u, ok := auth.User.(*tg.User); ok {
+			BotUsername = u.Username
+			slog.Info("Bot Companion username retrieved", "username", BotUsername)
+		}
 
 		// Block sampai context selesai
 		<-ctx.Done()
