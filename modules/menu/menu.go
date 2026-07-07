@@ -40,11 +40,9 @@ func init() {
 		OnlyOut:     true,
 		Handler:     menuHandler,
 
-		// Callback query routing
 		CallbackPrefix:  "menu",
 		CallbackHandler: menuCallbackHandler,
 
-		// Inline query handler (sisi bot companion)
 		InlineHandler: menuInlineHandler,
 	})
 }

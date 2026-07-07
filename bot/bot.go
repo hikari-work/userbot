@@ -63,22 +63,38 @@ func (b *BotClient) Run(ctx context.Context) error {
 
 	b.client = telegram.NewClient(b.cfg.ApiId, b.cfg.ApiHash, telegram.Options{
 		UpdateHandler: handler,
+		SessionStorage: &telegram.FileSessionStorage{
+			Path: "bot_session.json",
+		},
 	})
 
 	return b.client.Run(ctx, func(ctx context.Context) error {
-		// Autentikasi sebagai bot menggunakan token
-		auth, err := b.client.Auth().Bot(ctx, b.cfg.BotToken)
+		// Periksa apakah bot companion sudah terautentikasi (menggunakan session yang tersimpan)
+		status, err := b.client.Auth().Status(ctx)
 		if err != nil {
 			return err
 		}
 
-		b.api = b.client.API()
-		slog.Info("✅ Bot Companion berhasil terautentikasi")
-
-		if u, ok := auth.User.(*tg.User); ok {
-			BotUsername = u.Username
-			slog.Info("Bot Companion username retrieved", "username", BotUsername)
+		if !status.Authorized {
+			slog.Info("Bot Companion belum terautentikasi, melakukan login dengan token...")
+			auth, err := b.client.Auth().Bot(ctx, b.cfg.BotToken)
+			if err != nil {
+				return err
+			}
+			if u, ok := auth.User.(*tg.User); ok {
+				BotUsername = u.Username
+				slog.Info("Bot Companion login berhasil", "username", BotUsername)
+			}
+		} else {
+			slog.Info("Bot Companion berhasil login menggunakan session lama (tanpa rpc token login)")
+			if status.User != nil {
+				BotUsername = status.User.Username
+				slog.Info("Bot Companion username dari session", "username", BotUsername)
+			}
 		}
+
+		b.api = b.client.API()
+		slog.Info("✅ Bot Companion siap menerima updates")
 
 		// Block sampai context selesai
 		<-ctx.Done()
