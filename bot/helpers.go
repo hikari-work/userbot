@@ -81,6 +81,33 @@ func DeleteBotMessage(peer tg.InputPeerClass, msgID int) error {
 	}
 }
 
+// DeleteMessageWithUserbot menghapus pesan menggunakan akun userbot (bisa untuk inline message yang dikirim userbot)
+func DeleteMessageWithUserbot(chatID int64, msgID int) error {
+	if UserbotClient == nil {
+		return fmt.Errorf("userbot client tidak terdaftar")
+	}
+
+	ctx := UserbotClient.CreateContext()
+	peer, err := ctx.ResolveInputPeerById(chatID)
+	if err != nil {
+		return err
+	}
+
+	switch p := peer.(type) {
+	case *tg.InputPeerChannel:
+		_, err = ctx.Raw.ChannelsDeleteMessages(context.Background(), &tg.ChannelsDeleteMessagesRequest{
+			Channel: &tg.InputChannel{ChannelID: p.ChannelID, AccessHash: p.AccessHash},
+			ID:      []int{msgID},
+		})
+	default:
+		_, err = ctx.Raw.MessagesDeleteMessages(context.Background(), &tg.MessagesDeleteMessagesRequest{
+			ID:     []int{msgID},
+			Revoke: true,
+		})
+	}
+	return err
+}
+
 // EditInlineBotMessage mengedit pesan inline yang dikirim via inline query.
 func EditInlineBotMessage(inlineMessageID tg.InputBotInlineMessageIDClass, text string, rows [][]Button) error {
 	b := getInstance()

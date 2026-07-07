@@ -70,6 +70,7 @@ func main() {
 	// Jalankan Bot Companion di goroutine terpisah (opsional — skip jika BOT_TOKEN kosong)
 	botClient := bot.New(newConfig)
 	if botClient != nil {
+		bot.UserbotClient = client
 		go func() {
 			if err := botClient.Run(context.Background()); err != nil {
 				slog.Error("Bot Companion berhenti", "error", err)

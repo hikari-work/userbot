@@ -75,11 +75,11 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 	// Hapus pesan perintah .menu agar chat bersih
 	_ = ctx.DeleteMessages(uChat.GetID(), []int{uMsg.ID})
 
-	// Panggil inline query ke bot companion
+	// Panggil inline query ke bot companion dengan menyertakan ChatID di query
 	results, err := ctx.Raw.MessagesGetInlineBotResults(ctx, &tg.MessagesGetInlineBotResultsRequest{
 		Bot:    botInputPeer.GetInputUser(),
 		Peer:   chatInputPeer,
-		Query:  "menu",
+		Query:  fmt.Sprintf("menu:%d", uChat.GetID()),
 		Offset: "",
 	})
 	if err != nil {
@@ -91,23 +91,58 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	// Kirim hasil inline query ke chat
-	_, err = ctx.Raw.MessagesSendInlineBotResult(ctx, &tg.MessagesSendInlineBotResultRequest{
+	sentUpdates, err := ctx.Raw.MessagesSendInlineBotResult(ctx, &tg.MessagesSendInlineBotResultRequest{
 		Peer:     chatInputPeer,
 		RandomID: rand.Int63(),
 		QueryID:  results.QueryID,
 		ID:       results.Results[0].GetID(),
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Dapatkan msgID dari updates response
+	var msgID int
+	switch u := sentUpdates.(type) {
+	case *tg.Updates:
+		for _, upd := range u.Updates {
+			if nm, ok := upd.(*tg.UpdateNewMessage); ok {
+				msgID = nm.Message.GetID()
+				break
+			}
+			if ncm, ok := upd.(*tg.UpdateNewChannelMessage); ok {
+				msgID = ncm.Message.GetID()
+				break
+			}
+		}
+	case *tg.UpdateShortSentMessage:
+		msgID = u.ID
+	}
+
+	if msgID != 0 {
+		// Simpan msgID ke Redis agar userbot bisa menghapusnya nanti
+		key := fmt.Sprintf("menu_msg:%d", uChat.GetID())
+		_ = dbClient.Redis.Set(ctx, key, msgID, 0).Err()
+	}
+
+	return nil
 }
 
 // menuInlineHandler dipanggil saat bot menerima inline query dari userbot (sisi bot)
 func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
-	if q.Query != "menu" {
+	if !strings.HasPrefix(q.Query, "menu") {
 		return nil
 	}
 
+	// Ambil chatID dari query (format: "menu:<chatID>")
+	var chatID int64
+	parts := strings.Split(q.Query, ":")
+	if len(parts) == 2 {
+		chatID, _ = strconv.ParseInt(parts[1], 10, 64)
+	}
+
 	// Generate menu list halaman pertama (page 0)
-	text, buttons := getModulesPage(0)
+	text, buttons := getModulesPage(0, chatID)
 	keyboard := bot.BuildInlineKeyboard(buttons)
 
 	result := &tg.InputBotInlineResult{
@@ -131,66 +166,78 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	payload := strings.TrimPrefix(string(q.Data), "menu:")
 
-	// Paginasi: menu:page:<page_num>
+	// Paginasi: menu:page:<page_num>:<chat_id>
 	if strings.HasPrefix(payload, "page:") {
-		pageNumStr := strings.TrimPrefix(payload, "page:")
-		pageNum, err := strconv.Atoi(pageNumStr)
-		if err != nil {
-			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Halaman tidak valid.", false)
+		parts := strings.Split(strings.TrimPrefix(payload, "page:"), ":")
+		if len(parts) < 2 {
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Detail page tidak valid.", false)
 		}
+		pageNum, _ := strconv.Atoi(parts[0])
+		chatID, _ := strconv.ParseInt(parts[1], 10, 64)
 
-		text, buttons := getModulesPage(pageNum)
+		text, buttons := getModulesPage(pageNum, chatID)
 		if q.IsInline {
 			_ = bot.EditInlineBotMessage(q.InlineMessageID, text, buttons)
 		} else {
-			chatID := peerToID(q.Peer)
 			peer := inputPeerFromID(chatID)
 			_ = bot.EditBotMessage(peer, q.MsgID, text, buttons)
 		}
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 	}
 
-	// Detail Modul: menu:mod:<mod_name>:<from_page>
+	// Detail Modul: menu:mod:<mod_name>:<from_page>:<chat_id>
 	if strings.HasPrefix(payload, "mod:") {
 		parts := strings.Split(strings.TrimPrefix(payload, "mod:"), ":")
-		if len(parts) < 2 {
-			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Detail tidak valid.", false)
+		if len(parts) < 3 {
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Detail modul tidak valid.", false)
 		}
 		modName := parts[0]
 		fromPageStr := parts[1]
+		chatID, _ := strconv.ParseInt(parts[2], 10, 64)
 
 		mod, exists := manager.Registry[modName]
 		if !exists {
 			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Modul tidak ditemukan.", false)
 		}
 
-		text, buttons := getModuleDetail(mod, fromPageStr)
+		text, buttons := getModuleDetail(mod, fromPageStr, chatID)
 		if q.IsInline {
 			_ = bot.EditInlineBotMessage(q.InlineMessageID, text, buttons)
 		} else {
-			chatID := peerToID(q.Peer)
 			peer := inputPeerFromID(chatID)
 			_ = bot.EditBotMessage(peer, q.MsgID, text, buttons)
 		}
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 	}
 
-	// Tutup / Close Menu: menu:close
-	if payload == "close" {
-		if q.IsInline {
-			// CATATAN API TELEGRAM: Pesan dari inline query tidak bisa dihapus dari bot API (hanya bisa diedit).
-			// Sebagai gantinya, kita edit teksnya menjadi titik '.' (atau pesan kosong) dan hapus keyboard tombolnya.
-			if err := bot.EditInlineBotMessage(q.InlineMessageID, ".", nil); err != nil {
-				return bot.AnswerCallbackQuery(ctx, q.QueryID, "Gagal menutup menu.", false)
-			}
-		} else {
-			// Jika pesan biasa, kita hapus pesannya secara total
-			chatID := peerToID(q.Peer)
-			peer := inputPeerFromID(chatID)
-			if err := bot.DeleteBotMessage(peer, q.MsgID); err != nil {
-				return bot.AnswerCallbackQuery(ctx, q.QueryID, "Gagal menghapus menu.", false)
+	// Tutup / Close Menu: menu:close:<chat_id>
+	if strings.HasPrefix(payload, "close:") {
+		chatIDStr := strings.TrimPrefix(payload, "close:")
+		chatID, _ := strconv.ParseInt(chatIDStr, 10, 64)
+
+		// Hapus pesan menggunakan client userbot (karena userbot yang mengirim pesannya)
+		key := fmt.Sprintf("menu_msg:%d", chatID)
+		msgIDStr, err := dbClient.Redis.Get(ctx, key).Result()
+		deleted := false
+		if err == nil && msgIDStr != "" {
+			msgID, _ := strconv.Atoi(msgIDStr)
+			err = bot.DeleteMessageWithUserbot(chatID, msgID)
+			if err == nil {
+				deleted = true
+				_ = dbClient.Redis.Del(ctx, key).Err()
 			}
 		}
+
+		// Jika gagal menghapus (misal ID pesan hilang dari Redis), fallback ke edit jadi titik
+		if !deleted {
+			if q.IsInline {
+				_ = bot.EditInlineBotMessage(q.InlineMessageID, ".", nil)
+			} else {
+				peer := inputPeerFromID(chatID)
+				_ = bot.EditBotMessage(peer, q.MsgID, ".", nil)
+			}
+		}
+
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 	}
 
@@ -210,7 +257,7 @@ func getSortedModules() []*manager.Module {
 }
 
 // getModulesPage menghasilkan teks menu dan list tombol untuk halaman modul tertentu
-func getModulesPage(page int) (string, [][]bot.Button) {
+func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 	modules := getSortedModules()
 	totalModules := len(modules)
 
@@ -240,7 +287,7 @@ func getModulesPage(page int) (string, [][]bot.Button) {
 		mod := modules[i]
 		btn := bot.Button{
 			Text:         mod.Name,
-			CallbackData: fmt.Sprintf("menu:mod:%s:%d", mod.Name, page),
+			CallbackData: fmt.Sprintf("menu:mod:%s:%d:%d", mod.Name, page, chatID),
 		}
 		currentRow = append(currentRow, btn)
 
@@ -258,9 +305,9 @@ func getModulesPage(page int) (string, [][]bot.Button) {
 	nextPage := page + 1
 
 	navRow := []bot.Button{
-		{Text: "◀️ Prev", CallbackData: fmt.Sprintf("menu:page:%d", prevPage)},
-		{Text: "❌ Close", CallbackData: "menu:close"},
-		{Text: "▶️ Next", CallbackData: fmt.Sprintf("menu:page:%d", nextPage)},
+		{Text: "◀️ Prev", CallbackData: fmt.Sprintf("menu:page:%d:%d", prevPage, chatID)},
+		{Text: "❌ Close", CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
+		{Text: "▶️ Next", CallbackData: fmt.Sprintf("menu:page:%d:%d", nextPage, chatID)},
 	}
 	modRows = append(modRows, navRow)
 
@@ -271,7 +318,7 @@ func getModulesPage(page int) (string, [][]bot.Button) {
 }
 
 // getModuleDetail menghasilkan teks detail modul dan list tombol (Back & Close)
-func getModuleDetail(mod *manager.Module, fromPage string) (string, [][]bot.Button) {
+func getModuleDetail(mod *manager.Module, fromPage string, chatID int64) (string, [][]bot.Button) {
 	// Ambil prefix perintah yang aktif saat ini dari Redis
 	prefix, err := dbClient.Redis.Get(context.Background(), "prefix").Result()
 	if err != nil || prefix == "" {
@@ -293,8 +340,8 @@ func getModuleDetail(mod *manager.Module, fromPage string) (string, [][]bot.Butt
 	// Tombol Back & Close
 	buttons := [][]bot.Button{
 		{
-			{Text: "◀️ Back", CallbackData: fmt.Sprintf("menu:page:%s", fromPage)},
-			{Text: "❌ Close", CallbackData: "menu:close"},
+			{Text: "◀️ Back", CallbackData: fmt.Sprintf("menu:page:%s:%d", fromPage, chatID)},
+			{Text: "❌ Close", CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
 		},
 	}
 

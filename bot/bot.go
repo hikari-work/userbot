@@ -6,6 +6,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/celestix/gotgproto"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/tg"
 
@@ -24,6 +25,9 @@ var instance *BotClient
 
 // BotUsername menyimpan username bot companion yang didapatkan saat auth login
 var BotUsername string
+
+// UserbotClient menyimpan instance client gotgproto dari userbot untuk aksi cross-client
+var UserbotClient *gotgproto.Client
 
 // New membuat BotClient baru dari config.
 // Mengembalikan nil dan log warning jika BOT_TOKEN kosong (opsional).
