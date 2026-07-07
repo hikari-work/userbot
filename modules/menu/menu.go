@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -21,6 +20,66 @@ import (
 )
 
 const pageSize = 6 // 3 baris x 2 kolom
+
+// LogicalModule mendefinisikan modul kategori secara logis
+type LogicalModule struct {
+	ID          string
+	Name        string
+	Description string
+	Commands    []string
+}
+
+// Daftar modul kategori logis yang akan ditampilkan di tombol menu
+var logicalModules = []LogicalModule{
+	{
+		ID:          "admins",
+		Name:        "👮 Admins",
+		Description: "Mengelola administrasi grup (ban, kick, promote, dll.)",
+		Commands:    []string{"promote", "demote", "ban", "unban", "kick", "purge", "purgeme", "cleanservice", "addblacklist", "remblacklist", "blacklist"},
+	},
+	{
+		ID:          "afk",
+		Name:        "💤 AFK",
+		Description: "Mengatur status Away From Keyboard (AFK) saat Anda tidak aktif",
+		Commands:    []string{"afk"},
+	},
+	{
+		ID:          "antiflood",
+		Name:        "🛡️ Antiflood",
+		Description: "Mengamankan grup dari spamming/flood pesan",
+		Commands:    []string{"antiflood", "setflood"},
+	},
+	{
+		ID:          "download",
+		Name:        "📥 Download",
+		Description: "Mengunduh file atau media dari link internet secara langsung",
+		Commands:    []string{"download"},
+	},
+	{
+		ID:          "ping",
+		Name:        "🏓 Ping",
+		Description: "Memeriksa kecepatan respon (latensi) userbot ke Telegram",
+		Commands:    []string{"ping"},
+	},
+	{
+		ID:          "prefix",
+		Name:        "⚙️ Prefix",
+		Description: "Mengubah prefix (simbol pemicu) untuk semua command userbot",
+		Commands:    []string{"prefix"},
+	},
+	{
+		ID:          "status",
+		Name:        "ℹ️ Status",
+		Description: "Melihat status sistem, versi, uptime, dan info sistem lainnya",
+		Commands:    []string{"status"},
+	},
+	{
+		ID:          "voice_chat",
+		Name:        "🎵 Voice Chat",
+		Description: "Mengontrol pemutaran musik/audio secara real-time di voice chat grup",
+		Commands:    []string{"joinvc", "leavevc", "play", "pause", "resume", "stop"},
+	},
+}
 
 func init() {
 	manager.Register(&manager.Module{
@@ -145,11 +204,15 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 	text, buttons := getModulesPage(0, chatID)
 	keyboard := bot.BuildInlineKeyboard(buttons)
 
+	// Parse HTML agar bold tag <b> dan ℹ️ dirender dengan benar
+	plainText, entities := utils.ParseHTML(text)
+
 	result := &tg.InputBotInlineResult{
 		ID:   "menu_main",
 		Type: "article",
 		SendMessage: &tg.InputBotInlineMessageText{
-			Message:     text,
+			Message:     plainText,
+			Entities:    entities,
 			ReplyMarkup: keyboard,
 			NoWebpage:   true,
 		},
@@ -185,22 +248,30 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 	}
 
-	// Detail Modul: menu:mod:<mod_name>:<from_page>:<chat_id>
+	// Detail Modul: menu:mod:<mod_id>:<from_page>:<chat_id>
 	if strings.HasPrefix(payload, "mod:") {
 		parts := strings.Split(strings.TrimPrefix(payload, "mod:"), ":")
 		if len(parts) < 3 {
 			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Detail modul tidak valid.", false)
 		}
-		modName := parts[0]
+		modID := parts[0]
 		fromPageStr := parts[1]
 		chatID, _ := strconv.ParseInt(parts[2], 10, 64)
 
-		mod, exists := manager.Registry[modName]
-		if !exists {
+		// Cari modul kategori logis
+		var targetMod *LogicalModule
+		for i := range logicalModules {
+			if logicalModules[i].ID == modID {
+				targetMod = &logicalModules[i]
+				break
+			}
+		}
+
+		if targetMod == nil {
 			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Modul tidak ditemukan.", false)
 		}
 
-		text, buttons := getModuleDetail(mod, fromPageStr, chatID)
+		text, buttons := getModuleDetail(targetMod, fromPageStr, chatID)
 		if q.IsInline {
 			_ = bot.EditInlineBotMessage(q.InlineMessageID, text, buttons)
 		} else {
@@ -244,22 +315,9 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 }
 
-// getSortedModules mengambil dan mengurutkan seluruh modul terdaftar secara alfabetis
-func getSortedModules() []*manager.Module {
-	var modules []*manager.Module
-	for _, mod := range manager.Registry {
-		modules = append(modules, mod)
-	}
-	sort.Slice(modules, func(i, j int) bool {
-		return modules[i].Name < modules[j].Name
-	})
-	return modules
-}
-
 // getModulesPage menghasilkan teks menu dan list tombol untuk halaman modul tertentu
 func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
-	modules := getSortedModules()
-	totalModules := len(modules)
+	totalModules := len(logicalModules)
 
 	// Hitung total halaman
 	totalPages := (totalModules + pageSize - 1) / pageSize
@@ -284,10 +342,10 @@ func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 	var modRows [][]bot.Button
 	var currentRow []bot.Button
 	for i := start; i < end; i++ {
-		mod := modules[i]
+		mod := logicalModules[i]
 		btn := bot.Button{
 			Text:         mod.Name,
-			CallbackData: fmt.Sprintf("menu:mod:%s:%d:%d", mod.Name, page, chatID),
+			CallbackData: fmt.Sprintf("menu:mod:%s:%d:%d", mod.ID, page, chatID),
 		}
 		currentRow = append(currentRow, btn)
 
@@ -318,7 +376,7 @@ func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 }
 
 // getModuleDetail menghasilkan teks detail modul dan list tombol (Back & Close)
-func getModuleDetail(mod *manager.Module, fromPage string, chatID int64) (string, [][]bot.Button) {
+func getModuleDetail(mod *LogicalModule, fromPage string, chatID int64) (string, [][]bot.Button) {
 	// Ambil prefix perintah yang aktif saat ini dari Redis
 	prefix, err := dbClient.Redis.Get(context.Background(), "prefix").Result()
 	if err != nil || prefix == "" {

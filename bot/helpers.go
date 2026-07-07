@@ -6,6 +6,8 @@ import (
 	"math/rand"
 
 	"github.com/gotd/td/tg"
+
+	"github.com/hikari-work/userbot/utils"
 )
 
 // Button merepresentasikan satu tombol pada inline keyboard
@@ -26,13 +28,19 @@ func SendWithButtons(peer tg.InputPeerClass, text string, rows [][]Button) error
 	}
 
 	markup := buildInlineKeyboard(rows)
+	parsedText, entities := utils.ParseHTML(text)
 
-	_, err := b.api.MessagesSendMessage(context.Background(), &tg.MessagesSendMessageRequest{
+	req := &tg.MessagesSendMessageRequest{
 		Peer:        peer,
-		Message:     text,
+		Message:     parsedText,
 		ReplyMarkup: markup,
 		RandomID:    rand.Int63(),
-	})
+	}
+	if len(entities) > 0 {
+		req.SetEntities(entities)
+	}
+
+	_, err := b.api.MessagesSendMessage(context.Background(), req)
 	return err
 }
 
@@ -43,11 +51,17 @@ func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]But
 		return fmt.Errorf("bot companion tidak aktif")
 	}
 
+	parsedText, entities := utils.ParseHTML(text)
+
 	req := &tg.MessagesEditMessageRequest{
 		Peer:    peer,
 		ID:      msgID,
-		Message: text,
+		Message: parsedText,
 	}
+	if len(entities) > 0 {
+		req.SetEntities(entities)
+	}
+
 	if rows != nil {
 		req.SetReplyMarkup(buildInlineKeyboard(rows))
 	} else {
@@ -115,10 +129,16 @@ func EditInlineBotMessage(inlineMessageID tg.InputBotInlineMessageIDClass, text 
 		return fmt.Errorf("bot companion tidak aktif")
 	}
 
+	parsedText, entities := utils.ParseHTML(text)
+
 	req := &tg.MessagesEditInlineBotMessageRequest{
 		ID:      inlineMessageID,
-		Message: text,
+		Message: parsedText,
 	}
+	if len(entities) > 0 {
+		req.SetEntities(entities)
+	}
+
 	if rows != nil {
 		req.SetReplyMarkup(buildInlineKeyboard(rows))
 	} else {
