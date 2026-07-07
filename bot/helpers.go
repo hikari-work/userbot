@@ -1,11 +1,12 @@
 package bot
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"math/rand"
-
-	"github.com/gotd/td/tg"
+	"net/http"
+	"time"
 )
 
 // Button merepresentasikan satu tombol pada inline keyboard
@@ -16,140 +17,192 @@ type Button struct {
 	SwitchInline string // beralih ke inline mode dengan query ini
 }
 
+// Structs untuk request Bot API HTTP
+type botAPIInlineKeyboardButton struct {
+	Text         string  `json:"text"`
+	CallbackData *string `json:"callback_data,omitempty"`
+	URL          *string `json:"url,omitempty"`
+	SwitchInline *string `json:"switch_inline_query,omitempty"`
+}
+
+type botAPIInlineKeyboardMarkup struct {
+	InlineKeyboard [][]botAPIInlineKeyboardButton `json:"inline_keyboard"`
+}
+
+type sendMessageRequest struct {
+	ChatID      int64                       `json:"chat_id"`
+	Text        string                      `json:"text"`
+	ParseMode   string                      `json:"parse_mode"`
+	ReplyMarkup *botAPIInlineKeyboardMarkup `json:"reply_markup,omitempty"`
+}
+
+type editMessageTextRequest struct {
+	ChatID      int64                       `json:"chat_id"`
+	MessageID   int                         `json:"message_id"`
+	Text        string                      `json:"text"`
+	ParseMode   string                      `json:"parse_mode"`
+	ReplyMarkup *botAPIInlineKeyboardMarkup `json:"reply_markup,omitempty"`
+}
+
+type answerCallbackQueryRequest struct {
+	CallbackQueryID string `json:"callback_query_id"`
+	Text            string `json:"text,omitempty"`
+	ShowAlert       bool   `json:"show_alert,omitempty"`
+}
+
+// Client HTTP dengan timeout
+var httpClient = &http.Client{
+	Timeout: 10 * time.Second,
+}
+
 // SendWithButtons mengirim pesan teks dengan inline keyboard via bot.
-// peer: gunakan ctx.ResolveInputPeerById(chatID) dari handler userbot.
+// chatID: ID chat tujuan (e.g. -1001234567890).
 // rows: baris tombol, tiap row berisi beberapa Button.
-func SendWithButtons(peer tg.InputPeerClass, text string, rows [][]Button) error {
+func SendWithButtons(chatID int64, text string, rows [][]Button) error {
 	b := getInstance()
-	if b == nil || b.api == nil {
+	if b == nil {
 		return fmt.Errorf("bot companion tidak aktif")
 	}
 
-	markup := buildInlineKeyboard(rows)
+	reqBody := sendMessageRequest{
+		ChatID:    chatID,
+		Text:      text,
+		ParseMode: "HTML",
+	}
+	if rows != nil {
+		reqBody.ReplyMarkup = buildHTTPInlineKeyboard(rows)
+	}
 
-	_, err := b.api.MessagesSendMessage(context.Background(), &tg.MessagesSendMessageRequest{
-		Peer:        peer,
-		Message:     text,
-		ReplyMarkup: markup,
-		RandomID:    rand.Int63(),
-	})
-	return err
+	jsonBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", b.cfg.BotToken)
+	resp, err := httpClient.Post(url, "application/json", bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errMsg struct {
+			Description string `json:"description"`
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&errMsg)
+		return fmt.Errorf("telegram bot api error: %s (code %d)", errMsg.Description, resp.StatusCode)
+	}
+	return nil
 }
 
 // EditBotMessage mengedit pesan yang sudah dikirim bot.
-// Jika rows nil, keyboard dihapus (pesan menjadi plain text).
-func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]Button) error {
+// Jika rows nil, keyboard dihapus.
+func EditBotMessage(chatID int64, msgID int, text string, rows [][]Button) error {
 	b := getInstance()
-	if b == nil || b.api == nil {
+	if b == nil {
 		return fmt.Errorf("bot companion tidak aktif")
 	}
 
-	req := &tg.MessagesEditMessageRequest{
-		Peer:    peer,
-		ID:      msgID,
-		Message: text,
+	reqBody := editMessageTextRequest{
+		ChatID:    chatID,
+		MessageID: msgID,
+		Text:      text,
+		ParseMode: "HTML",
 	}
 	if rows != nil {
-		req.SetReplyMarkup(buildInlineKeyboard(rows))
-	} else {
-		// Hapus keyboard
-		req.SetReplyMarkup(&tg.ReplyKeyboardHide{})
+		reqBody.ReplyMarkup = buildHTTPInlineKeyboard(rows)
 	}
 
-	_, err := b.api.MessagesEditMessage(context.Background(), req)
-	return err
+	jsonBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/editMessageText", b.cfg.BotToken)
+	resp, err := httpClient.Post(url, "application/json", bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errMsg struct {
+			Description string `json:"description"`
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&errMsg)
+		return fmt.Errorf("telegram bot api error: %s (code %d)", errMsg.Description, resp.StatusCode)
+	}
+	return nil
 }
 
 // AnswerCallbackQuery menjawab callback query dari tombol yang ditekan user.
 // Jika showAlert true, teks ditampilkan sebagai popup alert (bukan toast kecil).
 func AnswerCallbackQuery(ctx context.Context, queryID int64, text string, showAlert bool) error {
 	b := getInstance()
-	if b == nil || b.api == nil {
+	if b == nil {
 		return fmt.Errorf("bot companion tidak aktif")
 	}
 
-	req := &tg.MessagesSetBotCallbackAnswerRequest{
-		QueryID: queryID,
-	}
-	if text != "" {
-		req.SetMessage(text)
-		req.SetAlert(showAlert)
+	reqBody := answerCallbackQueryRequest{
+		CallbackQueryID: fmt.Sprintf("%d", queryID),
+		Text:            text,
+		ShowAlert:       showAlert,
 	}
 
-	_, err := b.api.MessagesSetBotCallbackAnswer(ctx, req)
-	return err
+	jsonBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/answerCallbackQuery", b.cfg.BotToken)
+	resp, err := httpClient.Post(url, "application/json", bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errMsg struct {
+			Description string `json:"description"`
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&errMsg)
+		return fmt.Errorf("telegram bot api error: %s (code %d)", errMsg.Description, resp.StatusCode)
+	}
+	return nil
 }
 
-// AnswerInlineQuery menjawab inline query dengan daftar hasil.
-func AnswerInlineQuery(ctx context.Context, queryID int64, results []tg.InputBotInlineResultClass) error {
-	b := getInstance()
-	if b == nil || b.api == nil {
-		return fmt.Errorf("bot companion tidak aktif")
-	}
-
-	_, err := b.api.MessagesSetInlineBotResults(ctx, &tg.MessagesSetInlineBotResultsRequest{
-		QueryID:    queryID,
-		Results:    results,
-		CacheTime:  300,
-		NextOffset: "",
-	})
-	return err
-}
-
-// IsActive mengembalikan true jika Bot Companion aktif dan sudah terautentikasi
+// IsActive mengembalikan true jika Bot Companion aktif dan token diset
 func IsActive() bool {
 	b := getInstance()
-	return b != nil && b.api != nil
-}
-
-// PeerFromCallbackQuery mengkonversi PeerClass dari callback query ke InputPeerClass
-// menggunakan entity store yang terisi dari update sebelumnya.
-func PeerFromCallbackQuery(peer tg.PeerClass) tg.InputPeerClass {
-	switch p := peer.(type) {
-	case *tg.PeerUser:
-		hash := entityStore.resolveUserHash(p.UserID)
-		return &tg.InputPeerUser{UserID: p.UserID, AccessHash: hash}
-	case *tg.PeerChat:
-		return &tg.InputPeerChat{ChatID: p.ChatID}
-	case *tg.PeerChannel:
-		hash := entityStore.resolveChannelHash(p.ChannelID)
-		return &tg.InputPeerChannel{ChannelID: p.ChannelID, AccessHash: hash}
-	}
-	return &tg.InputPeerEmpty{}
+	return b != nil && b.cfg.BotToken != ""
 }
 
 // ── helpers internal ──────────────────────────────────────────────────────────
 
-// buildInlineKeyboard mengkonversi [][]Button ke tg.ReplyInlineMarkup
-func buildInlineKeyboard(rows [][]Button) *tg.ReplyInlineMarkup {
-	var tgRows []tg.KeyboardButtonRow
+// buildHTTPInlineKeyboard mengkonversi [][]Button ke format Bot API
+func buildHTTPInlineKeyboard(rows [][]Button) *botAPIInlineKeyboardMarkup {
+	var httpRows [][]botAPIInlineKeyboardButton
 	for _, row := range rows {
-		var tgBtns []tg.KeyboardButtonClass
+		var httpRow []botAPIInlineKeyboardButton
 		for _, btn := range row {
-			switch {
-			case btn.CallbackData != "":
-				tgBtns = append(tgBtns, &tg.KeyboardButtonCallback{
-					Text: btn.Text,
-					Data: []byte(btn.CallbackData),
-				})
-			case btn.URL != "":
-				tgBtns = append(tgBtns, &tg.KeyboardButtonURL{
-					Text: btn.Text,
-					URL:  btn.URL,
-				})
-			case btn.SwitchInline != "":
-				tgBtns = append(tgBtns, &tg.KeyboardButtonSwitchInline{
-					Text:  btn.Text,
-					Query: btn.SwitchInline,
-				})
-			default:
-				tgBtns = append(tgBtns, &tg.KeyboardButtonCallback{
-					Text: btn.Text,
-					Data: []byte(btn.Text),
-				})
+			var httpBtn botAPIInlineKeyboardButton
+			httpBtn.Text = btn.Text
+			if btn.CallbackData != "" {
+				val := btn.CallbackData
+				httpBtn.CallbackData = &val
+			} else if btn.URL != "" {
+				val := btn.URL
+				httpBtn.URL = &val
+			} else if btn.SwitchInline != "" {
+				val := btn.SwitchInline
+				httpBtn.SwitchInline = &val
+			} else {
+				val := btn.Text
+				httpBtn.CallbackData = &val
 			}
+			httpRow = append(httpRow, httpBtn)
 		}
-		tgRows = append(tgRows, tg.KeyboardButtonRow{Buttons: tgBtns})
+		httpRows = append(httpRows, httpRow)
 	}
-	return &tg.ReplyInlineMarkup{Rows: tgRows}
+	return &botAPIInlineKeyboardMarkup{InlineKeyboard: httpRows}
 }

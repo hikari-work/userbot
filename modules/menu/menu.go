@@ -39,15 +39,8 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	// Resolve peer dari userbot context — sudah include access hash yang benar
-	peer, err := ctx.ResolveInputPeerById(uChat.GetID())
-	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			"❌ <b>Gagal resolve peer:</b> "+err.Error())
-		return nil
-	}
-
-	err = bot.SendWithButtons(peer, "📋 <b>Menu Utama</b>\n\nPilih salah satu menu di bawah:", [][]bot.Button{
+	// Kirim langsung menggunakan Chat ID (int64) via Bot API HTTP
+	err := bot.SendWithButtons(uChat.GetID(), "📋 <b>Menu Utama</b>\n\nPilih salah satu menu di bawah:", [][]bot.Button{
 		{
 			{Text: "🏓 Ping",       CallbackData: "menu:ping"},
 			{Text: "ℹ️ Status",    CallbackData: "menu:status"},
@@ -85,13 +78,25 @@ func menuCallbackHandler(ctx context.Context, q *tg.UpdateBotCallbackQuery) erro
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "🔧 Gunakan .ban / .kick / .promote di grup.", false)
 
 	case "close":
-		// Resolve peer dari entity store bot (terisi saat bot menerima update)
-		peer := bot.PeerFromCallbackQuery(q.Peer)
-		if err := bot.EditBotMessage(peer, q.MsgID, "❌ Menu ditutup.", nil); err != nil {
+		chatID := peerToID(q.Peer)
+		if err := bot.EditBotMessage(chatID, q.MsgID, "❌ Menu ditutup.", nil); err != nil {
 			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Gagal menutup menu.", false)
 		}
 		return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 	}
 
 	return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
+}
+
+// peerToID mengkonversi PeerClass ke int64 chat ID
+func peerToID(peer tg.PeerClass) int64 {
+	switch p := peer.(type) {
+	case *tg.PeerUser:
+		return p.UserID
+	case *tg.PeerChat:
+		return -p.ChatID
+	case *tg.PeerChannel:
+		return -1_000_000_000_000 - p.ChannelID
+	}
+	return 0
 }
