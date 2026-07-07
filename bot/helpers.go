@@ -17,9 +17,9 @@ type Button struct {
 }
 
 // SendWithButtons mengirim pesan teks dengan inline keyboard via bot.
-// rows adalah baris tombol, setiap row berisi beberapa Button.
-// text mendukung HTML entity (bold, italic, code, dll.) via Telegram MessageEntity.
-func SendWithButtons(chatID int64, text string, rows [][]Button) error {
+// peer: gunakan ctx.ResolveInputPeerById(chatID) dari handler userbot.
+// rows: baris tombol, tiap row berisi beberapa Button.
+func SendWithButtons(peer tg.InputPeerClass, text string, rows [][]Button) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
 		return fmt.Errorf("bot companion tidak aktif")
@@ -28,7 +28,7 @@ func SendWithButtons(chatID int64, text string, rows [][]Button) error {
 	markup := buildInlineKeyboard(rows)
 
 	_, err := b.api.MessagesSendMessage(context.Background(), &tg.MessagesSendMessageRequest{
-		Peer:        inputPeerFromID(chatID),
+		Peer:        peer,
 		Message:     text,
 		ReplyMarkup: markup,
 		RandomID:    rand.Int63(),
@@ -36,20 +36,24 @@ func SendWithButtons(chatID int64, text string, rows [][]Button) error {
 	return err
 }
 
-// EditBotMessage mengedit pesan yang sudah dikirim bot, dengan inline keyboard baru.
-func EditBotMessage(chatID int64, msgID int, text string, rows [][]Button) error {
+// EditBotMessage mengedit pesan yang sudah dikirim bot.
+// Jika rows nil, keyboard dihapus (pesan menjadi plain text).
+func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]Button) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
 		return fmt.Errorf("bot companion tidak aktif")
 	}
 
 	req := &tg.MessagesEditMessageRequest{
-		Peer:    inputPeerFromID(chatID),
+		Peer:    peer,
 		ID:      msgID,
 		Message: text,
 	}
 	if rows != nil {
 		req.SetReplyMarkup(buildInlineKeyboard(rows))
+	} else {
+		// Hapus keyboard
+		req.SetReplyMarkup(&tg.ReplyKeyboardHide{})
 	}
 
 	_, err := b.api.MessagesEditMessage(context.Background(), req)
@@ -57,7 +61,7 @@ func EditBotMessage(chatID int64, msgID int, text string, rows [][]Button) error
 }
 
 // AnswerCallbackQuery menjawab callback query dari tombol yang ditekan user.
-// Jika showAlert true, teks akan ditampilkan sebagai popup alert bukan toast.
+// Jika showAlert true, teks ditampilkan sebagai popup alert (bukan toast kecil).
 func AnswerCallbackQuery(ctx context.Context, queryID int64, text string, showAlert bool) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
@@ -98,6 +102,22 @@ func IsActive() bool {
 	return b != nil && b.api != nil
 }
 
+// PeerFromCallbackQuery mengkonversi PeerClass dari callback query ke InputPeerClass
+// menggunakan entity store yang terisi dari update sebelumnya.
+func PeerFromCallbackQuery(peer tg.PeerClass) tg.InputPeerClass {
+	switch p := peer.(type) {
+	case *tg.PeerUser:
+		hash := entityStore.resolveUserHash(p.UserID)
+		return &tg.InputPeerUser{UserID: p.UserID, AccessHash: hash}
+	case *tg.PeerChat:
+		return &tg.InputPeerChat{ChatID: p.ChatID}
+	case *tg.PeerChannel:
+		hash := entityStore.resolveChannelHash(p.ChannelID)
+		return &tg.InputPeerChannel{ChannelID: p.ChannelID, AccessHash: hash}
+	}
+	return &tg.InputPeerEmpty{}
+}
+
 // ── helpers internal ──────────────────────────────────────────────────────────
 
 // buildInlineKeyboard mengkonversi [][]Button ke tg.ReplyInlineMarkup
@@ -132,17 +152,4 @@ func buildInlineKeyboard(rows [][]Button) *tg.ReplyInlineMarkup {
 		tgRows = append(tgRows, tg.KeyboardButtonRow{Buttons: tgBtns})
 	}
 	return &tg.ReplyInlineMarkup{Rows: tgRows}
-}
-
-// inputPeerFromID membuat InputPeer dari chatID numerik Telegram.
-// Mendukung: user (> 0), basic group (< 0, kecil), supergroup/channel (< -1_000_000_000_000).
-func inputPeerFromID(chatID int64) tg.InputPeerClass {
-	if chatID > 0 {
-		return &tg.InputPeerUser{UserID: chatID}
-	}
-	if chatID < -1_000_000_000_000 {
-		channelID := -(chatID + 1_000_000_000_000)
-		return &tg.InputPeerChannel{ChannelID: channelID}
-	}
-	return &tg.InputPeerChat{ChatID: -chatID}
 }
