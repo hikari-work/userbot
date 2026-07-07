@@ -1,0 +1,30 @@
+# Binaries
+userbot
+*.exe
+
+# Environment & secrets
+.env
+*.env
+config.yaml
+config.yml
+*.session
+*.session-journal
+
+# Session data (Telegram SQLite session file)
+user_session
+user_session/
+
+# Downloads
+downloads/
+
+# Scratch / temp
+scratch/
+
+# Build artifacts
+/bin/
+/dist/
+
+# Go
+vendor/
+*.test
+*.out

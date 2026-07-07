@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GoProfileHistory">
+    <profile entry="$USER_HOME$/GoLandProfiles/go_build_github_com_hikari-work_userbot-heap_with_gc-2026-07-05-094240-625.pprof">
+      <GoProfileMapEntry>
+        <option name="buildAnchorMillis" value="1783219357754" />
+        <option name="file" value="go_build_github_com_hikari-work_userbot-heap_with_gc-2026-07-05-094240-625.pprof" />
+        <option name="ours" value="true" />
+      </GoProfileMapEntry>
+    </profile>
+    <profile entry="$USER_HOME$/GoLandProfiles/go_build_github_com_hikari-work_userbot-goroutine-2026-07-05-094246-386.pprof">
+      <GoProfileMapEntry>
+        <option name="buildAnchorMillis" value="1783219357754" />
+        <option name="file" value="go_build_github_com_hikari-work_userbot-goroutine-2026-07-05-094246-386.pprof" />
+        <option name="ours" value="true" />
+      </GoProfileMapEntry>
+    </profile>
+  </component>
+</project>
