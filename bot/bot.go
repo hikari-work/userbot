@@ -7,6 +7,8 @@ import (
 	"log/slog"
 
 	"github.com/celestix/gotgproto"
+	"github.com/celestix/gotgproto/sessionMaker"
+	"github.com/glebarez/sqlite"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/tg"
 
@@ -61,15 +63,24 @@ func (b *BotClient) Run(ctx context.Context) error {
 		return nil
 	})
 
+	// Inisialisasi SQLite session storage menggunakan sessionMaker gotgproto
+	_, botSessionStorage, err := sessionMaker.NewSessionStorage(
+		context.Background(),
+		sessionMaker.SqlSession(sqlite.Open("bot_session")),
+		false,
+	)
+	if err != nil {
+		slog.Error("Gagal inisialisasi SQLite session storage untuk bot", "error", err)
+		return err
+	}
+
 	b.client = telegram.NewClient(b.cfg.ApiId, b.cfg.ApiHash, telegram.Options{
-		UpdateHandler: handler,
-		SessionStorage: &telegram.FileSessionStorage{
-			Path: "bot_session.json",
-		},
+		UpdateHandler:  handler,
+		SessionStorage: botSessionStorage,
 	})
 
 	return b.client.Run(ctx, func(ctx context.Context) error {
-		// Periksa apakah bot companion sudah terautentikasi (menggunakan session yang tersimpan)
+		// Periksa apakah bot companion sudah terautentikasi (menggunakan session SQLite yang tersimpan)
 		status, err := b.client.Auth().Status(ctx)
 		if err != nil {
 			return err
@@ -86,10 +97,10 @@ func (b *BotClient) Run(ctx context.Context) error {
 				slog.Info("Bot Companion login berhasil", "username", BotUsername)
 			}
 		} else {
-			slog.Info("Bot Companion berhasil login menggunakan session lama (tanpa rpc token login)")
+			slog.Info("Bot Companion berhasil login menggunakan session SQLite lama (tanpa rpc token login)")
 			if status.User != nil {
 				BotUsername = status.User.Username
-				slog.Info("Bot Companion username dari session", "username", BotUsername)
+				slog.Info("Bot Companion username dari session SQLite", "username", BotUsername)
 			}
 		}
 
