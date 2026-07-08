@@ -481,5 +481,39 @@
   },
   "LangSuccess": {
     "other": "Language successfully changed to <code>{{.Language}}</code>!"
+  },
+  "FilterInPrivate": {
+    "other": "Use this command in a group chat"
+  },
+  "FilterUsage": {
+    "other": "<b>Usage:</b>\n• <code>.filter [trigger] [reply]</code>\n• Reply to a message with <code>.filter [trigger]</code>\n• <code>.stop [trigger]</code>\n• <code>.filters</code>"
+  },
+  "FilterSuccess": {
+    "other": "Filter for <code>{{.Trigger}}</code> has been successfully saved."
+  },
+  "FilterFailedSave": {
+    "other": "❌ <b>Failed to save filter:</b> {{.Error}}"
+  },
+  "FilterStopUsage": {
+    "other": "<b>Usage:</b> <code>.stop [trigger]</code>"
+  },
+  "FilterStopSuccess": {
+    "other": "✅ Filter for <code>{{.Trigger}}</code> has been successfully removed."
+  },
+  "FilterStopNotFound": {
+    "other": "ℹ️ Filter for <code>{{.Trigger}}</code> not found."
+  },
+  "FilterStopFailed": {
+    "other": "❌ <b>Failed to remove filter:</b> {{.Error}}"
+  },
+  "FiltersEmpty": {
+    "other": "ℹ️ <b>No active filters in this chat.</b>"
+  },
+  "FiltersListHeader": {
+    "other": "📋 <b>List of active filters in this chat:</b>\n"
+  },
+  "FiltersFailedRetrieve": {
+    "other": "❌ <b>Failed to retrieve filters:</b> {{.Error}}"
   }
 }
+

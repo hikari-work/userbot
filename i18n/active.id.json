@@ -481,5 +481,39 @@
   },
   "LangSuccess": {
     "other": "Bahasa berhasil diubah ke <code>{{.Language}}</code>!"
+  },
+  "FilterInPrivate": {
+    "other": "Gunakan command ini di group chat"
+  },
+  "FilterUsage": {
+    "other": "<b>Penggunaan:</b>\n• <code>.filter [pemicu] [balasan]</code>\n• Balas pesan dengan <code>.filter [pemicu]</code>\n• <code>.stop [pemicu]</code>\n• <code>.filters</code>"
+  },
+  "FilterSuccess": {
+    "other": "Filter untuk <code>{{.Trigger}}</code> berhasil disimpan."
+  },
+  "FilterFailedSave": {
+    "other": "❌ <b>Gagal menyimpan filter:</b> {{.Error}}"
+  },
+  "FilterStopUsage": {
+    "other": "<b>Penggunaan:</b> <code>.stop [pemicu]</code>"
+  },
+  "FilterStopSuccess": {
+    "other": "✅ Filter untuk <code>{{.Trigger}}</code> berhasil dihapus."
+  },
+  "FilterStopNotFound": {
+    "other": "ℹ️ Filter untuk <code>{{.Trigger}}</code> tidak ditemukan."
+  },
+  "FilterStopFailed": {
+    "other": "❌ <b>Gagal menghapus filter:</b> {{.Error}}"
+  },
+  "FiltersEmpty": {
+    "other": "ℹ️ <b>Tidak ada filter aktif di obrolan ini.</b>"
+  },
+  "FiltersListHeader": {
+    "other": "📋 <b>Daftar filter aktif di obrolan ini:</b>\n"
+  },
+  "FiltersFailedRetrieve": {
+    "other": "❌ <b>Gagal mengambil daftar filter:</b> {{.Error}}"
   }
 }
+
