@@ -1,0 +1,485 @@
+{
+  "BANFailed": {
+    "other": "❌ <b>Gagal memblokir pengguna:</b> {{.Error}}"
+  },
+  "BANLoading": {
+    "other": "⏳ <b>Memblokir pengguna...</b>"
+  },
+  "BANSuccess": {
+    "other": "✅ Pengguna <code>{{.UserId}}</code> berhasil diblokir dari grup!"
+  },
+  "BLEmpty": {
+    "other": "ℹ️ <b>Blacklist kosong di obrolan ini.</b>"
+  },
+  "BLErrorNotGroup": {
+    "other": "❌ <b>Error:</b> Perintah blacklist hanya dapat digunakan di grup atau supergrup."
+  },
+  "BLFailedClear": {
+    "other": "❌ <b>Gagal membersihkan blacklist:</b> {{.Error}}"
+  },
+  "BLFailedPattern": {
+    "other": "<b>Gagal menambahkan pola ke blacklist:</b> {{.Error}}"
+  },
+  "BLFailedRemove": {
+    "other": "❌ <b>Gagal menghapus pola dari blacklist:</b> {{.Error}}"
+  },
+  "BLFailedRetrieve": {
+    "other": "❌ <b>Gagal mengambil blacklist:</b> {{.Error}}"
+  },
+  "BLInvalidRegex": {
+    "other": "<b>Pola regex tidak valid: {{.Error}}</b>"
+  },
+  "BLListHeader": {
+    "other": "📋 <b>Kata/frasa yang di-blacklist di obrolan ini:</b>\n"
+  },
+  "BLNotFound": {
+    "other": "ℹ️ <code>{{.Word}}</code> tidak ada di dalam blacklist."
+  },
+  "BLSuccess": {
+    "other": "Menambahkan pola regex <code>{{.Regex}}</code> ke daftar blacklist."
+  },
+  "BLSuccessClear": {
+    "other": "✅ <b>Blacklist berhasil dibersihkan untuk obrolan ini!</b>"
+  },
+  "BLSuccessRemove": {
+    "other": "✅ Berhasil menghapus pola <code>{{.Word}}</code> dari blacklist."
+  },
+  "BLTriggered": {
+    "other": "🚨 <b>Blacklist Terpicu!</b>\nPengguna <code>{{.UserId}}</code> mengirim pesan yang berisi kata yang di-blacklist: <code>{{.Word}}</code>. Pesan telah dihapus."
+  },
+  "BLUnknownSubcommand": {
+    "other": "❌ <b>Sub-perintah tidak diketahui.</b>\nPenggunaan:\n• <code>.bl add [kata]</code>\n• <code>.bl del [kata]</code>\n• <code>.bl list</code>\n• <code>.bl clear</code>"
+  },
+  "BLUsage": {
+    "other": "<b>Usage:</b>\n• <code>.bl add [word/phrase]</code>\n• <code>.bl del [word/phrase]</code>\n• <code>.bl list</code>\n• <code>.bl clear</code>"
+  },
+  "BLUsageAdd": {
+    "other": "<b>Usage:</b> <code>.bl add [word/phrase]</code>"
+  },
+  "BLUsageDel": {
+    "other": "❌ <b>Penggunaan:</b> <code>.bl del [kata/frasa]</code>"
+  },
+  "CSDisabled": {
+    "other": "<b>NONAKTIF</b>"
+  },
+  "CSEnabled": {
+    "other": "<b>AKTIF</b>"
+  },
+  "CSOnlyGroupError": {
+    "other": "❌ <b>Error:</b> CleanService hanya dapat digunakan di grup atau supergrup."
+  },
+  "CSStatusChange": {
+    "other": "✅ CleanService (auto-deleting user join/left messages) telah {{.Status}} untuk obrolan ini."
+  },
+  "CSErrorUpdate": {
+    "other": "❌ <b>Gagal memperbarui pengaturan CleanService:</b> {{.Error}}"
+  },
+  "CSUsage": {
+    "other": "❌ <b>Penggunaan:</b> <code>.cleanservice [on/off]</code>"
+  },
+  "DemoteFailed": {
+    "other": "❌ <b>Gagal menurunkan jabatan pengguna:</b> {{.Error}}"
+  },
+  "DemoteLoading": {
+    "other": "⏳ <b>Menurunkan jabatan pengguna...</b>"
+  },
+  "DemoteSuccess": {
+    "other": "✅ Hak admin untuk pengguna <code>{{.UserId}}</code> berhasil dicabut!"
+  },
+  "DownloadAnalyzing": {
+    "other": "<i>🔍 menganalisis tautan telegram...</i>"
+  },
+  "DownloadCompleted": {
+    "other": "✅ <b>Unduhan {{.Type}} Selesai!</b>\n📄 <b>Nama Berkas:</b> <code>{{.Name}}</code>"
+  },
+  "DownloadDownloading": {
+    "other": "<i>⚡ Mengunduh {{.Type}}: <code>{{.Name}}</code> ke server...</i>"
+  },
+  "DownloadFailedAnalyze": {
+    "other": "<b>❌ Gagal menganalisis tautan:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedDownloadMedia": {
+    "other": "<b>❌ Gagal mengunduh media:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedGetMsg": {
+    "other": "<b>❌ Gagal mengambil pesan:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedMkdir": {
+    "other": "<b>❌ Gagal membuat folder unduhan:\n\nSilakan periksa izin</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedResolveChat": {
+    "other": "<b>❌ Gagal menemukan obrolan:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedUpload": {
+    "other": "<b>❌ gagal mengunggah berkas ke Telegram:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadGettingData": {
+    "other": "<i>📥 Mengambil data Telegram...</i>"
+  },
+  "DownloadUploading": {
+    "other": "<i>📤 Mengunggah <code>{{.Name}}</code> kembali ke Telegram...</i>"
+  },
+  "DownloadUsage": {
+    "other": "<b>⚠️ Penggunaan:</b> <code>.download [link_telegram]</code>"
+  },
+  "FailedGetTargetUser": {
+    "other": "❌ <b>Gagal mendapatkan pengguna target untuk {{.Action}}:</b> {{.Error}}"
+  },
+  "FloodConfigInfo": {
+    "other": "ℹ️ <b>Konfigurasi Antiflood untuk obrolan ini:</b>\n• Batas: <code>{{.Max}}</code> pesan per <code>{{.TTL}}</code> detik\n• Tindakan: <b>{{.Action}}</b>"
+  },
+  "FloodDisabled": {
+    "other": "✅ <b>Antiflood telah dinonaktifkan untuk obrolan ini!</b>"
+  },
+  "FloodErrorAction": {
+    "other": "❌ <b>Error:</b> Tindakan harus salah satu dari: <code>ban</code>, <code>kick</code>, <code>mute</code>."
+  },
+  "FloodErrorCheckPermission": {
+    "other": "❌ <b>Gagal memeriksa izin:</b> {{.Error}}"
+  },
+  "FloodErrorDisable": {
+    "other": "❌ <b>Gagal menonaktifkan Antiflood:</b> {{.Error}}"
+  },
+  "FloodErrorMax": {
+    "other": "❌ <b>Error:</b> Jumlah pesan maksimum harus di antara 1 dan 255."
+  },
+  "FloodErrorNoPermission": {
+    "other": "❌ <b>Error:</b> Anda harus menjadi admin dengan izin untuk memblokir/membatasi anggota untuk mengonfigurasi Antiflood."
+  },
+  "FloodErrorNotGroup": {
+    "other": "❌ <b>Error:</b> Antiflood hanya dapat digunakan di grup atau supergrup."
+  },
+  "FloodErrorPrivate": {
+    "other": "❌ <b>Error:</b> Antiflood tidak berlaku di obrolan pribadi."
+  },
+  "FloodErrorTTL": {
+    "other": "❌ <b>Error:</b> Durasi TTL harus berupa angka positif."
+  },
+  "FloodFailedConfig": {
+    "other": "❌ <b>Gagal menetapkan konfigurasi Antiflood:</b> {{.Error}}"
+  },
+  "FloodFailedRetrieve": {
+    "other": "❌ <b>Gagal mengambil konfigurasi:</b> {{.Error}}"
+  },
+  "FloodNotConfigured": {
+    "other": "ℹ️ <b>Antiflood saat ini belum dikonfigurasi untuk obrolan ini.</b>"
+  },
+  "FloodSuccessConfig": {
+    "other": "✅ <b>Antiflood berhasil diatur!</b>\n• Batas: <code>{{.Max}}</code> pesan per <code>{{.TTL}}</code> detik\n• Tindakan: <b>{{.Action}}</b>"
+  },
+  "FloodTriggered": {
+    "other": "🚨 <b>Antiflood Terpicu!</b>\nPengguna <code>{{.UserId}}</code> telah <b>{{.Result}}</b> karena membanjiri pesan."
+  },
+  "FloodUsage": {
+    "other": "❌ <b>Penggunaan:</b> <code>.setflood [detik_ttl] [pesan_maks] [tindakan]</code>\nContoh: <code>.setflood 5 10 ban</code>\nAtau untuk menonaktifkan: <code>.setflood off</code>\nTindakan: <code>ban</code>, <code>kick</code>, <code>mute</code>"
+  },
+  "KICKFailed": {
+    "other": "❌ <b>Gagal mengeluarkan pengguna:</b> {{.Error}}"
+  },
+  "KICKLoading": {
+    "other": "⏳ <b>Mengeluarkan pengguna...</b>"
+  },
+  "KICKSuccess": {
+    "other": "✅ Pengguna <code>{{.UserId}}</code> berhasil dikeluarkan dari grup!"
+  },
+  "MenuBackBtn": {
+    "other": "◀️ Kembali"
+  },
+  "MenuBotNotActive": {
+    "other": "⚠️ <b>Bot Companion tidak aktif.</b>\nSet <code>BOT_TOKEN</code> di .env untuk menggunakan fitur inline menu."
+  },
+  "MenuBotUsernameMissing": {
+    "other": "⚠️ <b>Bot Username belum didapatkan.</b> Harap tunggu beberapa detik saat startup."
+  },
+  "MenuCloseBtn": {
+    "other": "❌ Tutup"
+  },
+  "MenuFailedResolveUsername": {
+    "other": "❌ <b>Gagal resolve bot username:</b> {{.Error}}"
+  },
+  "MenuInlineDesc": {
+    "other": "Klik di sini untuk mengirim menu utama"
+  },
+  "MenuInlineTitle": {
+    "other": "Menu Utama Userbot"
+  },
+  "MenuInvalidModule": {
+    "other": "Detail modul tidak valid."
+  },
+  "MenuInvalidPage": {
+    "other": "Detail page tidak valid."
+  },
+  "MenuListText": {
+    "other": "📦 <b>Daftar Modul Userbot</b> (Hal {{.Page}}/{{.Total}})\n\nSilakan pilih modul di bawah untuk melihat detail commands:"
+  },
+  "MenuModuleDetail": {
+    "other": "📦 <b>Modul: {{.Name}}</b>\n\nℹ️ <i>{{.Desc}}</i>\n\n<b>Commands:</b>\n{{.Commands}}"
+  },
+  "MenuModuleNotFound": {
+    "other": "Modul tidak ditemukan."
+  },
+  "MenuNextBtn": {
+    "other": "▶️ Next"
+  },
+  "MenuNoDirectCommands": {
+    "other": "Tidak ada direct command. Modul bekerja di latar belakang."
+  },
+  "MenuPrevBtn": {
+    "other": "◀️ Prev"
+  },
+  "OnlyGroupError": {
+    "other": "❌ Perintah ini hanya dapat digunakan di grup atau supergrup."
+  },
+  "PongMessage": {
+    "other": "Pong! Latensi: {{.Since}}"
+  },
+  "PrefixFailedRedis": {
+    "other": "Gagal mengubah prefix di Redis: <i>{{.Error}}</i>"
+  },
+  "PrefixLengthError": {
+    "other": "Prefix harus berupa <b>satu karakter/simbol</b>!"
+  },
+  "PrefixSuccess": {
+    "other": "Prefix berhasil diubah menjadi <code>{{.Prefix}}</code> secara <b>real-time</b> (tanpa restart)!"
+  },
+  "PrefixUsage": {
+    "other": "Format salah! Gunakan: <code>prefix &lt;simbol&gt;</code> (contoh: <code>prefix .</code> atau <code>prefix !</code>)"
+  },
+  "PromoteFailed": {
+    "other": "❌ <b>Gagal mempromosikan pengguna:</b> {{.Error}}"
+  },
+  "PromoteLoading": {
+    "other": "⏳ <b>Mempromosikan pengguna...</b>"
+  },
+  "PromoteSuccess": {
+    "other": "✅ Pengguna <code>{{.UserId}}</code> berhasil dipromosikan menjadi Admin!"
+  },
+  "PromoteSuccessTitle": {
+    "other": "✅ Pengguna <code>{{.UserId}}</code> berhasil dipromosikan dengan gelar <b>{{.Title}}</b>!"
+  },
+  "PurgeCheckPermissionError": {
+    "other": "❌ <b>Gagal memeriksa izin:</b> {{.Error}}"
+  },
+  "PurgeNoPermission": {
+    "other": "❌ <b>Error:</b> Anda tidak memiliki izin untuk menghapus pesan di obrolan ini."
+  },
+  "PurgeReplyRequired": {
+    "other": "❌ <b>Silakan balas pesan untuk mulai membersihkan dari pesan tersebut.</b>"
+  },
+  "PurgeResolveChatFailed": {
+    "other": "❌ <b>Gagal menemukan Obrolan:</b> {{.Error}}"
+  },
+  "PurgemeReplyRequired": {
+    "other": "❌ <b>Silakan balas pesan untuk mulai membersihkan pesan sendiri dari pesan tersebut.</b>"
+  },
+  "StatusMessage": {
+    "other": "<b> STATUS SERVER &amp; USERBOT</b>\n--------------------------------------------\n<b> CPU Usage:</b> <code>{{.CPU}}%</code>\n<b> System RAM:</b>{{.RAM}}\n\n<b> Go Runtime Stats:</b>\n  • Goroutines: <code>{{.Goroutines}}</code>\n  • Go Memory Alloc: <code>{{.GoAlloc}}</code> (sys: <code>{{.GoSys}}</code>)\n  • Go Heap Alloc: <code>{{.GoHeapAlloc}}</code> (sys: <code>{{.GoHeapSys}}</code>)\n  • Go Heap Idle: <code>{{.GoHeapIdle}}</code>\n  • Go GC Cycles: <code>{{.GcCycles}}</code>\n--------------------------------------------\n<b>⏰ Bot Uptime:</b> <code>{{.BotUptime}}</code>\n<b>⚙️ Sys Uptime:</b> <code>{{.SysUptime}}</code>"
+  },
+  "StatusRAMDetail": {
+    "other": "\n  • Total: <code>{{.Total}}</code>\n  • Used: <code>{{.Used}} ({{.Perc}}%)</code>\n  • Free: <code>{{.Free}}</code>"
+  },
+  "UNBANFailed": {
+    "other": "❌ <b>Gagal membatalkan blokir pengguna:</b> {{.Error}}"
+  },
+  "UNBANLoading": {
+    "other": "⏳ <b>Membatalkan blokir pengguna...</b>"
+  },
+  "UNBANSuccess": {
+    "other": "✅ Blokir pengguna <code>{{.UserId}}</code> berhasil dibatalkan!"
+  },
+  "VCAddedSongsCount": {
+    "other": "➕ <b>Menambahkan {{.Count}} lagu ke daftar putar.</b>"
+  },
+  "VCAddedToPlaylist": {
+    "other": "➕ <b>Ditambahkan ke daftar putar:</b> {{.Title}}"
+  },
+  "VCAlreadyJoined": {
+    "other": "ℹ️ Bot sudah berada di dalam Voice Chat."
+  },
+  "VCFailedAddTrack": {
+    "other": "❌ <b>Gagal menambahkan track:</b> {{.Error}}"
+  },
+  "VCFailedAudioTrack": {
+    "other": "❌ <b>Gagal membuat audio track:</b> {{.Error}}"
+  },
+  "VCFailedCreateOffer": {
+    "other": "❌ <b>Gagal membuat penawaran (offer):</b> {{.Error}}"
+  },
+  "VCFetchFailed": {
+    "other": "❌ <b>Error:</b> Gagal mengambil detail video/playlist."
+  },
+  "VCFetchingInfo": {
+    "other": "⏳ <b>Mengambil info audio...</b>"
+  },
+  "VCFailedGetInfo": {
+    "other": "❌ <b>Gagal mendapatkan info voice chat:</b> {{.Error}}"
+  },
+  "VCFailedJoinCall": {
+    "other": "❌ <b>Gagal bergabung ke panggilan grup via Telegram:</b> {{.Error}}"
+  },
+  "VCFailedParseParams": {
+    "other": "❌ <b>Gagal mengurai parameter koneksi Telegram:</b> {{.Error}}"
+  },
+  "VCFailedPeerConn": {
+    "other": "❌ <b>Gagal membuat peer connection:</b> {{.Error}}"
+  },
+  "VCFailedSetLocalDesc": {
+    "other": "❌ <b>Gagal mengatur deskripsi lokal (local description):</b> {{.Error}}"
+  },
+  "VCFailedSetRemoteDesc": {
+    "other": "❌ <b>Gagal mengatur deskripsi jarak jauh (remote description):</b> {{.Error}}"
+  },
+  "VCInterceptorError": {
+    "other": "❌ <b>Error registri interceptor:</b> {{.Error}}"
+  },
+  "VCInvalidYouTube": {
+    "other": "❌ <b>Error:</b> Harap berikan URL/ID YouTube yang valid, atau balas pesan yang berisi tautan YouTube."
+  },
+  "VCJoinSuccess": {
+    "other": "✅ <b>Berhasil bergabung dengan Voice Chat!</b>"
+  },
+  "VCLeftSuccess": {
+    "other": "✅ Berhasil keluar dari Voice Chat."
+  },
+  "VCMediaEngineError": {
+    "other": "❌ <b>Error MediaEngine:</b> {{.Error}}"
+  },
+  "VCMissingConnParams": {
+    "other": "❌ <b>Tidak menerima parameter koneksi voice chat dari Telegram.</b>"
+  },
+  "VCNoAudioPlaying": {
+    "other": "ℹ️ Tidak ada audio yang sedang diputar."
+  },
+  "VCNotJoined": {
+    "other": "ℹ️ Bot tidak sedang berada di dalam Voice Chat."
+  },
+  "VCOnlyError": {
+    "other": "❌ <b>Error:</b> Voice chat hanya didukung di grup/supergrup/channel."
+  },
+  "VCNowStreaming": {
+    "other": "🎵 <b>Sedang memutar:</b> {{.Title}}"
+  },
+  "VCNowStreamingRaw": {
+    "other": "🎵 Sedang memutar: {{.Title}}"
+  },
+  "VCPlaybackFinished": {
+    "other": "⏹️ <b>Pemutaran selesai.</b>"
+  },
+  "VCPlaybackStopped": {
+    "other": "⏹️ <b>Pemutaran dihentikan & playlist dibersihkan.</b>"
+  },
+  "VCPaybackPaused": {
+    "other": "⏸️ <b>Pemutaran audio dijeda.</b>"
+  },
+  "VCPaybackResumed": {
+    "other": "▶️ <b>Pemutaran audio dilanjutkan.</b>"
+  },
+  "action_ban": {
+    "other": "blokir"
+  },
+  "action_banning": {
+    "other": "memblokir"
+  },
+  "action_demoting": {
+    "other": "menurunkan jabatan"
+  },
+  "action_kick": {
+    "other": "keluarkan"
+  },
+  "action_kicking": {
+    "other": "mengeluarkan"
+  },
+  "action_mute": {
+    "other": "senyapkan"
+  },
+  "action_promoting": {
+    "other": "mempromosikan"
+  },
+  "action_unbanning": {
+    "other": "membatalkan blokir"
+  },
+  "module_desc_admins": {
+    "other": "Mengelola administrasi grup (ban, kick, promote, dll.)"
+  },
+  "module_desc_afk": {
+    "other": "Mengatur status Away From Keyboard (AFK) saat Anda tidak aktif"
+  },
+  "module_desc_antiflood": {
+    "other": "Mengamankan grup dari spamming/flood pesan"
+  },
+  "module_desc_download": {
+    "other": "Mengunduh file atau media dari link internet secara langsung"
+  },
+  "module_desc_ping": {
+    "other": "Memeriksa kecepatan respon (latensi) userbot ke Telegram"
+  },
+  "module_desc_prefix": {
+    "other": "Mengubah prefix (simbol pemicu) untuk semua command userbot"
+  },
+  "module_desc_status": {
+    "other": "Melihat status sistem, versi, uptime, dan info sistem lainnya"
+  },
+  "module_desc_voicechat": {
+    "other": "Mengontrol pemutaran musik/audio secara real-time di voice chat grup"
+  },
+  "module_name_admins": {
+    "other": "👮 Admins"
+  },
+  "module_name_afk": {
+    "other": "💤 AFK"
+  },
+  "module_name_antiflood": {
+    "other": "🛡️ Antiflood"
+  },
+  "module_name_download": {
+    "other": "📥 Download"
+  },
+  "module_name_ping": {
+    "other": "🏓 Ping"
+  },
+  "module_name_prefix": {
+    "other": "⚙️ Prefix"
+  },
+  "module_name_status": {
+    "other": "ℹ️ Status"
+  },
+  "module_name_voicechat": {
+    "other": "🎵 Voice Chat"
+  },
+  "result_ban": {
+    "other": "diblokir dari grup"
+  },
+  "result_kick": {
+    "other": "dikeluarkan dari grup"
+  },
+  "result_mute": {
+    "other": "disenyapkan di obrolan ini"
+  },
+  "AFKDefaultReason": {
+    "other": "Saya akan segera kembali!"
+  },
+  "AFKFailed": {
+    "other": "Gagal mengaktifkan AFK: {{.Error}}"
+  },
+  "AFKSuccess": {
+    "other": "AFK Berhasil Diaktifkan"
+  },
+  "AFKBack": {
+    "other": "Saya kembali! Saya telah AFK selama {{.Duration}}"
+  },
+  "AFKStatus": {
+    "other": "Maaf, saya sedang AFK ({{.Reason}}). Sejak {{.Time}}"
+  },
+  "LangTitle": {
+    "other": "Pengaturan Bahasa"
+  },
+  "LangDesc": {
+    "other": "Pilih bahasa bot"
+  },
+  "LangSelect": {
+    "other": "🌐 <b>Pilih Bahasa</b>\n\nBahasa saat ini: <code>{{.Current}}</code>\n\nSilakan pilih salah satu bahasa yang tersedia di bawah ini:"
+  },
+  "LangSuccess": {
+    "other": "Bahasa berhasil diubah ke <code>{{.Language}}</code>!"
+  }
+}

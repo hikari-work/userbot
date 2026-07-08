@@ -1,0 +1,485 @@
+{
+  "BANFailed": {
+    "other": "❌ <b>Failed to ban user:</b> {{.Error}}"
+  },
+  "BANLoading": {
+    "other": "⏳ <b>Banning user...</b>"
+  },
+  "BANSuccess": {
+    "other": "✅ User <code>{{.UserId}}</code> successfully banned from the group!"
+  },
+  "BLEmpty": {
+    "other": "ℹ️ <b>Blacklist is empty in this chat.</b>"
+  },
+  "BLErrorNotGroup": {
+    "other": "❌ <b>Error:</b> Blacklist commands can only be used in groups or supergroups."
+  },
+  "BLFailedClear": {
+    "other": "❌ <b>Failed to clear blacklist:</b> {{.Error}}"
+  },
+  "BLFailedPattern": {
+    "other": "<b>Failed to add pattern to blacklist:</b> {{.Error}}"
+  },
+  "BLFailedRemove": {
+    "other": "❌ <b>Failed to remove pattern from blacklist:</b> {{.Error}}"
+  },
+  "BLFailedRetrieve": {
+    "other": "❌ <b>Failed to retrieve blacklist:</b> {{.Error}}"
+  },
+  "BLInvalidRegex": {
+    "other": "<b>Invalid regex pattern: {{.Error}}</b>"
+  },
+  "BLListHeader": {
+    "other": "📋 <b>Blacklisted words/phrases in this chat:</b>\n"
+  },
+  "BLNotFound": {
+    "other": "ℹ️ <code>{{.Word}}</code> was not in the blacklist."
+  },
+  "BLSuccess": {
+    "other": "Added regex pattern <code>{{.Regex}}</code> to the blacklist."
+  },
+  "BLSuccessClear": {
+    "other": "✅ <b>Blacklist cleared successfully for this chat!</b>"
+  },
+  "BLSuccessRemove": {
+    "other": "✅ Removed pattern <code>{{.Word}}</code> from the blacklist."
+  },
+  "BLTriggered": {
+    "other": "🚨 <b>Blacklist Triggered!</b>\nUser <code>{{.UserId}}</code> sent a message containing a blacklisted word: <code>{{.Word}}</code>. The message has been deleted."
+  },
+  "BLUnknownSubcommand": {
+    "other": "❌ <b>Unknown subcommand.</b>\nUsage:\n• <code>.bl add [word]</code>\n• <code>.bl del [word]</code>\n• <code>.bl list</code>\n• <code>.bl clear</code>"
+  },
+  "BLUsage": {
+    "other": "<b>Usage:</b>\n• <code>.bl add [word/phrase]</code>\n• <code>.bl del [word/phrase]</code>\n• <code>.bl list</code>\n• <code>.bl clear</code>"
+  },
+  "BLUsageAdd": {
+    "other": "<b>Usage:</b> <code>.bl add [word/phrase]</code>"
+  },
+  "BLUsageDel": {
+    "other": "❌ <b>Usage:</b> <code>.bl del [word/phrase]</code>"
+  },
+  "CSDisabled": {
+    "other": "<b>DISABLED</b>"
+  },
+  "CSEnabled": {
+    "other": "<b>ENABLED</b>"
+  },
+  "CSOnlyGroupError": {
+    "other": "❌ <b>Error:</b> CleanService can only be used in groups or supergroups."
+  },
+  "CSStatusChange": {
+    "other": "✅ CleanService (auto-deleting user join/left messages) has been {{.Status}} for this chat."
+  },
+  "CSErrorUpdate": {
+    "other": "❌ <b>Error updating CleanService setting:</b> {{.Error}}"
+  },
+  "CSUsage": {
+    "other": "❌ <b>Usage:</b> <code>.cleanservice [on/off]</code>"
+  },
+  "DemoteFailed": {
+    "other": "❌ <b>Failed to demote user:</b> {{.Error}}"
+  },
+  "DemoteLoading": {
+    "other": "⏳ <b>Demoting user...</b>"
+  },
+  "DemoteSuccess": {
+    "other": "✅ Admin rights for user <code>{{.UserId}}</code> successfully revoked!"
+  },
+  "DownloadAnalyzing": {
+    "other": "<i>🔍 analyze telegram link...</i>"
+  },
+  "DownloadCompleted": {
+    "other": "✅ <b>{{.Type}} Download Completed!</b>\n📄 <b>File Name:</b> <code>{{.Name}}</code>"
+  },
+  "DownloadDownloading": {
+    "other": "<i>⚡ Downloading {{.Type}}: <code>{{.Name}}</code> to server...</i>"
+  },
+  "DownloadFailedAnalyze": {
+    "other": "<b>❌ Failed to analyze link:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedDownloadMedia": {
+    "other": "<b>❌ Failed to download media:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedGetMsg": {
+    "other": "<b>❌ Failed getting message:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedMkdir": {
+    "other": "<b>❌ Failed creating folder downloads:\n\nTry to check permission</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedResolveChat": {
+    "other": "<b>❌ Failed to resolve chat:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadFailedUpload": {
+    "other": "<b>❌ failed upload file to Telegram:</b> <code>{{.Error}}</code>"
+  },
+  "DownloadGettingData": {
+    "other": "<i>📥 Getting Telegram data...</i>"
+  },
+  "DownloadUploading": {
+    "other": "<i>📤 Uploading <code>{{.Name}}</code> back to Telegram...</i>"
+  },
+  "DownloadUsage": {
+    "other": "<b>⚠️ Usage:</b> <code>.download [link_telegram]</code>"
+  },
+  "FailedGetTargetUser": {
+    "other": "❌ <b>Failed to get target user for {{.Action}}:</b> {{.Error}}"
+  },
+  "FloodConfigInfo": {
+    "other": "ℹ️ <b>Antiflood configuration for this chat:</b>\n• Limit: <code>{{.Max}}</code> messages per <code>{{.TTL}}</code> seconds\n• Action: <b>{{.Action}}</b>"
+  },
+  "FloodDisabled": {
+    "other": "✅ <b>Antiflood has been disabled for this chat!</b>"
+  },
+  "FloodErrorAction": {
+    "other": "❌ <b>Error:</b> Action must be one of: <code>ban</code>, <code>kick</code>, <code>mute</code>."
+  },
+  "FloodErrorCheckPermission": {
+    "other": "❌ <b>Error checking permissions:</b> {{.Error}}"
+  },
+  "FloodErrorDisable": {
+    "other": "❌ <b>Failed to disable Antiflood:</b> {{.Error}}"
+  },
+  "FloodErrorMax": {
+    "other": "❌ <b>Error:</b> Max message count must be between 1 and 255."
+  },
+  "FloodErrorNoPermission": {
+    "other": "❌ <b>Error:</b> You must be an admin with permission to ban/restrict members to configure Antiflood."
+  },
+  "FloodErrorNotGroup": {
+    "other": "❌ <b>Error:</b> Antiflood can only be used in groups or supergroups."
+  },
+  "FloodErrorPrivate": {
+    "other": "❌ <b>Error:</b> Antiflood is not applicable in private chats."
+  },
+  "FloodErrorTTL": {
+    "other": "❌ <b>Error:</b> TTL duration must be a positive number."
+  },
+  "FloodFailedConfig": {
+    "other": "❌ <b>Failed to set Antiflood configuration:</b> {{.Error}}"
+  },
+  "FloodFailedRetrieve": {
+    "other": "❌ <b>Failed to retrieve configuration:</b> {{.Error}}"
+  },
+  "FloodNotConfigured": {
+    "other": "ℹ️ <b>Antiflood is currently not configured for this chat.</b>"
+  },
+  "FloodSuccessConfig": {
+    "other": "✅ <b>Antiflood set successfully!</b>\n• Limit: <code>{{.Max}}</code> messages per <code>{{.TTL}}</code> seconds\n• Action: <b>{{.Action}}</b>"
+  },
+  "FloodTriggered": {
+    "other": "🚨 <b>Antiflood Triggered!</b>\nUser <code>{{.UserId}}</code> has been <b>{{.Result}}</b> for flooding messages."
+  },
+  "FloodUsage": {
+    "other": "❌ <b>Usage:</b> <code>.setflood [ttl_seconds] [max_messages] [action]</code>\nExample: <code>.setflood 5 10 ban</code>\nOr to disable: <code>.setflood off</code>\nActions: <code>ban</code>, <code>kick</code>, <code>mute</code>"
+  },
+  "KICKFailed": {
+    "other": "❌ <b>Failed to kick user:</b> {{.Error}}"
+  },
+  "KICKLoading": {
+    "other": "⏳ <b>Kicking user...</b>"
+  },
+  "KICKSuccess": {
+    "other": "✅ User <code>{{.UserId}}</code> successfully kicked!"
+  },
+  "MenuBackBtn": {
+    "other": "◀️ Back"
+  },
+  "MenuBotNotActive": {
+    "other": "⚠️ <b>Bot Companion is not active.</b>\nSet <code>BOT_TOKEN</code> in .env to use the inline menu feature."
+  },
+  "MenuBotUsernameMissing": {
+    "other": "⚠️ <b>Bot Username is not retrieved yet.</b> Please wait a few seconds during startup."
+  },
+  "MenuCloseBtn": {
+    "other": "❌ Close"
+  },
+  "MenuFailedResolveUsername": {
+    "other": "❌ <b>Failed to resolve bot username:</b> {{.Error}}"
+  },
+  "MenuInlineDesc": {
+    "other": "Click here to send the main menu"
+  },
+  "MenuInlineTitle": {
+    "other": "Userbot Main Menu"
+  },
+  "MenuInvalidModule": {
+    "other": "Invalid module details."
+  },
+  "MenuInvalidPage": {
+    "other": "Invalid page details."
+  },
+  "MenuListText": {
+    "other": "📦 <b>Userbot Module List</b> (Page {{.Page}}/{{.Total}})\n\nPlease select a module below to see command details:"
+  },
+  "MenuModuleDetail": {
+    "other": "📦 <b>Module: {{.Name}}</b>\n\nℹ️ <i>{{.Desc}}</i>\n\n<b>Commands:</b>\n{{.Commands}}"
+  },
+  "MenuModuleNotFound": {
+    "other": "Module not found."
+  },
+  "MenuNextBtn": {
+    "other": "▶️ Next"
+  },
+  "MenuNoDirectCommands": {
+    "other": "No direct commands. The module works in the background."
+  },
+  "MenuPrevBtn": {
+    "other": "◀️ Prev"
+  },
+  "OnlyGroupError": {
+    "other": "❌ This command can only be used in a group or supergroup."
+  },
+  "PongMessage": {
+    "other": "Pong! Latency: {{.Since}}"
+  },
+  "PrefixFailedRedis": {
+    "other": "Failed to change prefix in Redis: <i>{{.Error}}</i>"
+  },
+  "PrefixLengthError": {
+    "other": "Prefix must be <b>one character/symbol</b>!"
+  },
+  "PrefixSuccess": {
+    "other": "Prefix successfully changed to <code>{{.Prefix}}</code> in <b>real-time</b> (no restart required)!"
+  },
+  "PrefixUsage": {
+    "other": "Incorrect format! Use: <code>prefix &lt;symbol&gt;</code> (example: <code>prefix .</code> or <code>prefix !</code>)"
+  },
+  "PromoteFailed": {
+    "other": "❌ <b>Failed to promote user:</b> {{.Error}}"
+  },
+  "PromoteLoading": {
+    "other": "⏳ <b>Promoting user...</b>"
+  },
+  "PromoteSuccess": {
+    "other": "✅ User <code>{{.UserId}}</code> successfully promoted to Admin!"
+  },
+  "PromoteSuccessTitle": {
+    "other": "✅ User <code>{{.UserId}}</code> successfully promoted with title <b>{{.Title}}</b>!"
+  },
+  "PurgeCheckPermissionError": {
+    "other": "❌ <b>Error checking permissions:</b> {{.Error}}"
+  },
+  "PurgeNoPermission": {
+    "other": "❌ <b>Error:</b> You do not have permission to delete messages in this chat."
+  },
+  "PurgeReplyRequired": {
+    "other": "❌ <b>Please reply to a message to start purging from that message.</b>"
+  },
+  "PurgeResolveChatFailed": {
+    "other": "❌ <b>Failed to resolve Chat:</b> {{.Error}}"
+  },
+  "PurgemeReplyRequired": {
+    "other": "❌ <b>Please reply to a message to start purgeme from that message.</b>"
+  },
+  "StatusMessage": {
+    "other": "<b> SERVER &amp; USERBOT STATUS</b>\n--------------------------------------------\n<b> CPU Usage:</b> <code>{{.CPU}}%</code>\n<b> System RAM:</b>{{.RAM}}\n\n<b> Go Runtime Stats:</b>\n  • Goroutines: <code>{{.Goroutines}}</code>\n  • Go Memory Alloc: <code>{{.GoAlloc}}</code> (sys: <code>{{.GoSys}}</code>)\n  • Go Heap Alloc: <code>{{.GoHeapAlloc}}</code> (sys: <code>{{.GoHeapSys}}</code>)\n  • Go Heap Idle: <code>{{.GoHeapIdle}}</code>\n  • Go GC Cycles: <code>{{.GcCycles}}</code>\n--------------------------------------------\n<b>⏰ Bot Uptime:</b> <code>{{.BotUptime}}</code>\n<b>⚙️ Sys Uptime:</b> <code>{{.SysUptime}}</code>"
+  },
+  "StatusRAMDetail": {
+    "other": "\n  • Total: <code>{{.Total}}</code>\n  • Used: <code>{{.Used}} ({{.Perc}}%)</code>\n  • Free: <code>{{.Free}}</code>"
+  },
+  "UNBANFailed": {
+    "other": "❌ <b>Failed to unban user:</b> {{.Error}}"
+  },
+  "UNBANLoading": {
+    "other": "⏳ <b>Unbanning user...</b>"
+  },
+  "UNBANSuccess": {
+    "other": "✅ User <code>{{.UserId}}</code> successfully unbanned!"
+  },
+  "VCAddedSongsCount": {
+    "other": "➕ <b>Added {{.Count}} songs to playlist.</b>"
+  },
+  "VCAddedToPlaylist": {
+    "other": "➕ <b>Added to playlist:</b> {{.Title}}"
+  },
+  "VCAlreadyJoined": {
+    "other": "ℹ️ Bot is already in a Voice Chat."
+  },
+  "VCFailedAddTrack": {
+    "other": "❌ <b>Failed to add track:</b> {{.Error}}"
+  },
+  "VCFailedAudioTrack": {
+    "other": "❌ <b>Failed to create audio track:</b> {{.Error}}"
+  },
+  "VCFailedCreateOffer": {
+    "other": "❌ <b>Failed to create offer:</b> {{.Error}}"
+  },
+  "VCFetchFailed": {
+    "other": "❌ <b>Error:</b> Failed to fetch video/playlist details."
+  },
+  "VCFetchingInfo": {
+    "other": "⏳ <b>Fetching audio info...</b>"
+  },
+  "VCFailedGetInfo": {
+    "other": "❌ <b>Failed to get voice chat info:</b> {{.Error}}"
+  },
+  "VCFailedJoinCall": {
+    "other": "❌ <b>Failed to join group call via Telegram:</b> {{.Error}}"
+  },
+  "VCFailedParseParams": {
+    "other": "❌ <b>Failed to parse Telegram connection params:</b> {{.Error}}"
+  },
+  "VCFailedPeerConn": {
+    "other": "❌ <b>Failed to create peer connection:</b> {{.Error}}"
+  },
+  "VCFailedSetLocalDesc": {
+    "other": "❌ <b>Failed to set local description:</b> {{.Error}}"
+  },
+  "VCFailedSetRemoteDesc": {
+    "other": "❌ <b>Failed to set remote description:</b> {{.Error}}"
+  },
+  "VCInterceptorError": {
+    "other": "❌ <b>Interceptor registry error:</b> {{.Error}}"
+  },
+  "VCInvalidYouTube": {
+    "other": "❌ <b>Error:</b> Please provide a valid YouTube URL/ID, or reply to a message containing a YouTube link."
+  },
+  "VCJoinSuccess": {
+    "other": "✅ <b>Successfully joined Voice Chat!</b>"
+  },
+  "VCLeftSuccess": {
+    "other": "✅ Successfully left the Voice Chat."
+  },
+  "VCMediaEngineError": {
+    "other": "❌ <b>MediaEngine error:</b> {{.Error}}"
+  },
+  "VCMissingConnParams": {
+    "other": "❌ <b>Did not receive voice chat connection parameters from Telegram.</b>"
+  },
+  "VCNoAudioPlaying": {
+    "other": "ℹ️ No audio is currently playing."
+  },
+  "VCNotJoined": {
+    "other": "ℹ️ Bot is not currently in a Voice Chat."
+  },
+  "VCOnlyError": {
+    "other": "❌ <b>Error:</b> Voice chat is only supported in groups/supergroups/channels."
+  },
+  "VCNowStreaming": {
+    "other": "🎵 <b>Now streaming:</b> {{.Title}}"
+  },
+  "VCNowStreamingRaw": {
+    "other": "🎵 Now streaming: {{.Title}}"
+  },
+  "VCPlaybackFinished": {
+    "other": "⏹️ <b>Playback finished.</b>"
+  },
+  "VCPlaybackStopped": {
+    "other": "⏹️ <b>Playback stopped & playlist cleared.</b>"
+  },
+  "VCPaybackPaused": {
+    "other": "⏸️ <b>Audio playback paused.</b>"
+  },
+  "VCPaybackResumed": {
+    "other": "▶️ <b>Audio playback resumed.</b>"
+  },
+  "action_ban": {
+    "other": "ban"
+  },
+  "action_banning": {
+    "other": "banning"
+  },
+  "action_demoting": {
+    "other": "demoting"
+  },
+  "action_kick": {
+    "other": "kick"
+  },
+  "action_kicking": {
+    "other": "kicking"
+  },
+  "action_mute": {
+    "other": "mute"
+  },
+  "action_promoting": {
+    "other": "promoting"
+  },
+  "action_unbanning": {
+    "other": "unbanning"
+  },
+  "module_desc_admins": {
+    "other": "Manage group administration (ban, kick, promote, etc.)"
+  },
+  "module_desc_afk": {
+    "other": "Set Away From Keyboard (AFK) status when you are inactive"
+  },
+  "module_desc_antiflood": {
+    "other": "Secure groups from message spamming/flood"
+  },
+  "module_desc_download": {
+    "other": "Download files or media directly from internet links"
+  },
+  "module_desc_ping": {
+    "other": "Check response speed (latency) of userbot to Telegram"
+  },
+  "module_desc_prefix": {
+    "other": "Change prefix (trigger symbol) for all userbot commands"
+  },
+  "module_desc_status": {
+    "other": "View system status, version, uptime, and other system info"
+  },
+  "module_desc_voicechat": {
+    "other": "Control music/audio playback in real-time in group voice chats"
+  },
+  "module_name_admins": {
+    "other": "👮 Admins"
+  },
+  "module_name_afk": {
+    "other": "💤 AFK"
+  },
+  "module_name_antiflood": {
+    "other": "🛡️ Antiflood"
+  },
+  "module_name_download": {
+    "other": "📥 Download"
+  },
+  "module_name_ping": {
+    "other": "🏓 Ping"
+  },
+  "module_name_prefix": {
+    "other": "⚙️ Prefix"
+  },
+  "module_name_status": {
+    "other": "ℹ️ Status"
+  },
+  "module_name_voicechat": {
+    "other": "🎵 Voice Chat"
+  },
+  "result_ban": {
+    "other": "banned from the group"
+  },
+  "result_kick": {
+    "other": "kicked from the group"
+  },
+  "result_mute": {
+    "other": "muted in this chat"
+  },
+  "AFKDefaultReason": {
+    "other": "I'll be back!"
+  },
+  "AFKFailed": {
+    "other": "Failed to activate AFK: {{.Error}}"
+  },
+  "AFKSuccess": {
+    "other": "AFK Successfully Activated"
+  },
+  "AFKBack": {
+    "other": "I'm back! I've been AFK for {{.Duration}}"
+  },
+  "AFKStatus": {
+    "other": "Sorry, i'm AFK ({{.Reason}}). Since {{.Time}}"
+  },
+  "LangTitle": {
+    "other": "Language Settings"
+  },
+  "LangDesc": {
+    "other": "Select the bot's language"
+  },
+  "LangSelect": {
+    "other": "🌐 <b>Select Language</b>\n\nCurrent language: <code>{{.Current}}</code>\n\nPlease select one of the available languages below:"
+  },
+  "LangSuccess": {
+    "other": "Language successfully changed to <code>{{.Language}}</code>!"
+  }
+}
