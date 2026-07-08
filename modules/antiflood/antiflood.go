@@ -1,7 +1,6 @@
 package antiflood
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 	dbClient "github.com/hikari-work/userbot/connection"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -40,7 +40,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	args := update.Args()
 
 	if uChat.IsAUser() {
-		text, entities := utils.ParseHTML("❌ <b>Error:</b> Antiflood can only be used in groups or supergroups.")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorNotGroup", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -51,7 +51,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 
 	hasPermission, err := canRestrictMembers(ctx, uChat.GetID())
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Error checking permissions:</b> %s", err.Error()))
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorCheckPermission", map[string]interface{}{"Error": err.Error()}, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -60,7 +60,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 	if !hasPermission {
-		text, entities := utils.ParseHTML("❌ <b>Error:</b> You must be an admin with permission to ban/restrict members to configure Antiflood.")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorNoPermission", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -70,10 +70,10 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if len(args) == 1 && strings.ToLower(args[0]) == "off" {
-		ctxBg := context.Background()
+		ctxBg := ctx
 		err := dbClient.Redis.Del(ctxBg, fmt.Sprintf("userbot:flood:cfg:%d", uChat.GetID())).Err()
 		if err != nil {
-			text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Failed to disable Antiflood:</b> %s", err.Error()))
+			text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorDisable", map[string]interface{}{"Error": err.Error()}, nil))
 			_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 				ID:       uMsg.ID,
 				Message:  text,
@@ -82,7 +82,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 			return err
 		}
 
-		text, entities := utils.ParseHTML("✅ <b>Antiflood has been disabled for this chat!</b>")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodDisabled", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -92,10 +92,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if len(args) < 3 {
-		text, entities := utils.ParseHTML("❌ <b>Usage:</b> <code>.setflood [ttl_seconds] [max_messages] [action]</code>\n" +
-			"Example: <code>.setflood 5 10 ban</code>\n" +
-			"Or to disable: <code>.setflood off</code>\n" +
-			"Actions: <code>ban</code>, <code>kick</code>, <code>mute</code>")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodUsage", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -106,7 +103,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 
 	ttlVal, err := strconv.Atoi(args[0])
 	if err != nil || ttlVal <= 0 {
-		text, entities := utils.ParseHTML("❌ <b>Error:</b> TTL duration must be a positive number.")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorTTL", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -117,7 +114,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 
 	maxVal, err := strconv.Atoi(args[1])
 	if err != nil || maxVal <= 0 || maxVal > 255 {
-		text, entities := utils.ParseHTML("❌ <b>Error:</b> Max message count must be between 1 and 255.")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorMax", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -128,7 +125,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 
 	action := strings.ToLower(args[2])
 	if action != "ban" && action != "kick" && action != "mute" {
-		text, entities := utils.ParseHTML("❌ <b>Error:</b> Action must be one of: <code>ban</code>, <code>kick</code>, <code>mute</code>.")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorAction", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -137,7 +134,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	ctxBg := context.Background()
+	ctxBg := ctx
 	cfgKey := fmt.Sprintf("userbot:flood:cfg:%d", uChat.GetID())
 	err = dbClient.Redis.HSet(ctxBg, cfgKey, map[string]interface{}{
 		"ttl":    ttlVal,
@@ -146,7 +143,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	}).Err()
 
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Failed to set Antiflood configuration:</b> %s", err.Error()))
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodFailedConfig", map[string]interface{}{"Error": err.Error()}, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -155,9 +152,12 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 
-	successMsg := fmt.Sprintf("✅ <b>Antiflood set successfully!</b>\n"+
-		"• Limit: <code>%d</code> messages per <code>%d</code> seconds\n"+
-		"• Action: <b>%s</b>", maxVal, ttlVal, action)
+	actionLoc := i18n.Localize(ctx, "action_"+action, nil, nil)
+	successMsg := i18n.Localize(ctx, "FloodSuccessConfig", map[string]interface{}{
+		"Max":    maxVal,
+		"TTL":    ttlVal,
+		"Action": actionLoc,
+	}, nil)
 	text, entities := utils.ParseHTML(successMsg)
 	_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       uMsg.ID,
@@ -172,7 +172,7 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	uChat := update.EffectiveChat()
 
 	if uChat.IsAUser() {
-		text, entities := utils.ParseHTML("❌ <b>Error:</b> Antiflood is not applicable in private chats.")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorPrivate", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -181,12 +181,12 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	ctxBg := context.Background()
+	ctxBg := ctx
 	cfgKey := fmt.Sprintf("userbot:flood:cfg:%d", uChat.GetID())
 	cfg, err := dbClient.Redis.HGetAll(ctxBg, cfgKey).Result()
 
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Failed to retrieve configuration:</b> %s", err.Error()))
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodFailedRetrieve", map[string]interface{}{"Error": err.Error()}, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -196,7 +196,7 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if len(cfg) == 0 {
-		text, entities := utils.ParseHTML("ℹ️ <b>Antiflood is currently not configured for this chat.</b>")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodNotConfigured", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -205,9 +205,12 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	infoMsg := fmt.Sprintf("ℹ️ <b>Antiflood configuration for this chat:</b>\n"+
-		"• Limit: <code>%s</code> messages per <code>%s</code> seconds\n"+
-		"• Action: <b>%s</b>", cfg["max"], cfg["ttl"], cfg["action"])
+	actionLoc := i18n.Localize(ctx, "action_"+cfg["action"], nil, nil)
+	infoMsg := i18n.Localize(ctx, "FloodConfigInfo", map[string]interface{}{
+		"Max":    cfg["max"],
+		"TTL":    cfg["ttl"],
+		"Action": actionLoc,
+	}, nil)
 	text, entities := utils.ParseHTML(infoMsg)
 	_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       uMsg.ID,
@@ -231,7 +234,7 @@ func floodMessageHook(ctx *ext.Context, update *ext.Update) error {
 	uChat := update.EffectiveChat()
 	userID := user.ID
 
-	ctxBg := context.Background()
+	ctxBg := ctx
 	cfgKey := fmt.Sprintf("userbot:flood:cfg:%d", uChat.GetID())
 	cfg, err := dbClient.Redis.HGetAll(ctxBg, cfgKey).Result()
 	if err != nil || len(cfg) == 0 {
@@ -268,20 +271,16 @@ func floodMessageHook(ctx *ext.Context, update *ext.Update) error {
 	if count > int64(maxVal) {
 		dbClient.Redis.Del(ctxBg, cntKey)
 
-		var actionResult string
 		switch action {
 		case "ban":
 			_, err = ctx.BanChatMember(uChat.GetID(), userID, 0)
-			actionResult = "banned from the group"
 		case "kick":
 			_, err = ctx.BanChatMember(uChat.GetID(), userID, 0)
 			if err == nil {
 				_, _ = ctx.UnbanChatMember(uChat.GetID(), userID)
 			}
-			actionResult = "kicked from the group"
 		case "mute":
 			err = muteUser(ctx, uChat.GetID(), userID)
-			actionResult = "muted in this chat"
 		}
 
 		if err != nil {
@@ -289,8 +288,11 @@ func floodMessageHook(ctx *ext.Context, update *ext.Update) error {
 			return nil
 		}
 
-		warnMsg := fmt.Sprintf("🚨 <b>Antiflood Triggered!</b>\n"+
-			"User <code>%d</code> has been <b>%s</b> for flooding messages.", userID, actionResult)
+		actionResultLoc := i18n.Localize(ctx, "result_"+action, nil, nil)
+		warnMsg := i18n.Localize(ctx, "FloodTriggered", map[string]interface{}{
+			"UserId": userID,
+			"Result": actionResultLoc,
+		}, nil)
 		text, entities := utils.ParseHTML(warnMsg)
 		_, _ = ctx.SendMessage(uChat.GetID(), &tg.MessagesSendMessageRequest{
 			Message:  text,
@@ -300,7 +302,6 @@ func floodMessageHook(ctx *ext.Context, update *ext.Update) error {
 
 	return nil
 }
-
 
 func muteUser(ctx *ext.Context, chatID, userID int64) error {
 	inputPeerChat, err := ctx.ResolveInputPeerById(chatID)

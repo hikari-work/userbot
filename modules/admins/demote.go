@@ -1,10 +1,9 @@
 package admins
 
 import (
-	"fmt"
-
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -26,8 +25,7 @@ func demoteHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	// Display progress status
-	text, entities := utils.ParseHTML("⏳ <b>Demoting user...</b>")
+	text, entities := utils.ParseHTML(i18n.Localize(ctx, "DemoteLoading", nil, nil))
 	_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       update.EffectiveMessage.ID,
 		Message:  text,
@@ -43,7 +41,9 @@ func demoteHandler(ctx *ext.Context, update *ext.Update) error {
 
 	_, err := ctx.DemoteChatMember(chat.GetID(), target, opts)
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Failed to demote user:</b> %s", err.Error()))
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "DemoteFailed", map[string]interface{}{
+			"Error": err.Error(),
+		}, nil))
 		_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       update.EffectiveMessage.ID,
 			Message:  text,
@@ -52,7 +52,9 @@ func demoteHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 
-	text, entities = utils.ParseHTML(fmt.Sprintf("✅ Admin rights for user <code>%d</code> successfully revoked!", target))
+	text, entities = utils.ParseHTML(i18n.Localize(ctx, "DemoteSuccess", map[string]interface{}{
+		"UserId": target,
+	}, nil))
 	_, err = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       update.EffectiveMessage.ID,
 		Message:  text,

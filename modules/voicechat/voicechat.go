@@ -5,10 +5,18 @@ import "github.com/hikari-work/userbot/modules/manager"
 func init() {
 	manager.Register(&manager.Module{
 		Name:        "JoinVoiceChat",
-		Description: "Join or leave the Voice Chat of the group/channel",
-		Commands:    []string{"joinvc", "leavevc"},
+		Description: "Join the Voice Chat of the group/channel",
+		Commands:    []string{"joinvc"},
 		OnlyOut:     true,
 		Handler:     JoinVCHandler,
+	})
+
+	manager.Register(&manager.Module{
+		Name:        "LeaveVoiceChat",
+		Description: "Leave the Voice Chat of the group/channel",
+		Commands:    []string{"leavevc"},
+		OnlyOut:     true,
+		Handler:     LeaveVCHandler,
 	})
 
 	manager.Register(&manager.Module{
@@ -41,5 +49,25 @@ func init() {
 		Commands:    []string{"stop"},
 		OnlyOut:     true,
 		Handler:     StopHandler,
+	})
+
+	manager.Register(&manager.Module{
+		Name:        "SkipAudio",
+		Description: "Skip the currently playing song in the Voice Chat",
+		Commands:    []string{"skip"},
+		OnlyOut:     true,
+		Handler:     SkipHandler,
+	})
+
+	manager.Register(&manager.Module{
+		Name:        "PlaylistAudio",
+		Description: "Show the current playlist queue and control it",
+		Commands:    []string{"playlist", "pl"},
+		OnlyOut:     true,
+		Handler:     PlaylistHandler,
+
+		CallbackPrefix:  "vcpl",
+		CallbackHandler: PlaylistCallbackHandler,
+		InlineHandler:   PlaylistInlineHandler,
 	})
 }

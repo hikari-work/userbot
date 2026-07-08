@@ -1,5 +1,3 @@
-// Package bot menyediakan Bot Companion yang berjalan paralel dengan userbot.
-// Bot ini menangani inline query, callback query, dan pengiriman pesan dengan inline button.
 package bot
 
 import (
@@ -15,28 +13,28 @@ import (
 	"github.com/hikari-work/userbot/config"
 )
 
-type BotClient struct {
+type Client struct {
 	client *telegram.Client
 	api    *tg.Client
 	cfg    *config.Config
 }
 
-var instance *BotClient
-var BotUsername string
+var instance *Client
+var Username string
 var UserbotClient *gotgproto.Client
 
-func New(cfg *config.Config) *BotClient {
+func New(cfg *config.Config) *Client {
 	if cfg.BotToken == "" {
 		slog.Warn("BOT_TOKEN tidak diset — Bot Companion dinonaktifkan")
 		return nil
 	}
 
-	b := &BotClient{cfg: cfg}
+	b := &Client{cfg: cfg}
 	instance = b
 	return b
 }
 
-func (b *BotClient) Run(ctx context.Context) error {
+func (b *Client) Run(ctx context.Context) error {
 	handler := telegram.UpdateHandlerFunc(func(ctx context.Context, u tg.UpdatesClass) error {
 		switch upds := u.(type) {
 		case *tg.Updates:
@@ -81,14 +79,14 @@ func (b *BotClient) Run(ctx context.Context) error {
 				return err
 			}
 			if u, ok := auth.User.(*tg.User); ok {
-				BotUsername = u.Username
-				slog.Info("Bot Companion login berhasil", "username", BotUsername)
+				Username = u.Username
+				slog.Info("Bot Companion login berhasil", "username", Username)
 			}
 		} else {
 			slog.Info("Bot Companion berhasil login menggunakan session SQLite lama (tanpa rpc token login)")
 			if status.User != nil {
-				BotUsername = status.User.Username
-				slog.Info("Bot Companion username dari session SQLite", "username", BotUsername)
+				Username = status.User.Username
+				slog.Info("Bot Companion username dari session SQLite", "username", Username)
 			}
 		}
 
@@ -100,6 +98,6 @@ func (b *BotClient) Run(ctx context.Context) error {
 	})
 }
 
-func getInstance() *BotClient {
+func getInstance() *Client {
 	return instance
 }

@@ -1,14 +1,13 @@
 package afk
 
 import (
-	"context"
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 	dbClient "github.com/hikari-work/userbot/connection"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 )
 
@@ -28,11 +27,11 @@ func afkCommandHandler(ctx *ext.Context, update *ext.Update) error {
 	uMsg := update.EffectiveMessage
 	afkReason := strings.Join(update.Args(), " ")
 	if afkReason == "" {
-		afkReason = "I'll be back!"
+		afkReason = i18n.Localize(ctx, "AFKDefaultReason", nil, nil)
 	}
 	afkTimeStr := time.Now().Format(time.RFC3339)
 
-	ctxBg := context.Background()
+	ctxBg := ctx
 	err := dbClient.Redis.HSet(ctxBg, "userbot:afk", map[string]interface{}{
 		"active": "true",
 		"reason": afkReason,
@@ -41,14 +40,14 @@ func afkCommandHandler(ctx *ext.Context, update *ext.Update) error {
 	if err != nil {
 
 		_, err := ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			Message: "Failed activate AFK : " + err.Error(),
+			Message: i18n.Localize(ctx, "AFKFailed", map[string]interface{}{"Error": err.Error()}, nil),
 			ID:      uMsg.ID,
 		})
 		return err
 	}
 
 	_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-		Message: "AFK Successfully Activated ",
+		Message: i18n.Localize(ctx, "AFKSuccess", nil, nil),
 		ID:      uMsg.ID,
 	})
 	return err
@@ -60,7 +59,7 @@ func afkMessageHook(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	ctxBg := context.Background()
+	ctxBg := ctx
 
 	afkData, err := dbClient.Redis.HGetAll(ctxBg, "userbot:afk").Result()
 	if err != nil || len(afkData) == 0 || afkData["active"] != "true" {
@@ -78,7 +77,7 @@ func afkMessageHook(ctx *ext.Context, update *ext.Update) error {
 			durationStr = "a moment"
 		}
 
-		_, _ = ctx.Reply(update, ext.ReplyTextString(fmt.Sprintf("I'm back! I've been AFK for %s", durationStr)), nil)
+		_, _ = ctx.Reply(update, ext.ReplyTextString(i18n.Localize(ctx, "AFKBack", map[string]interface{}{"Duration": durationStr}, nil)), nil)
 		return nil
 	}
 
@@ -93,7 +92,7 @@ func afkMessageHook(ctx *ext.Context, update *ext.Update) error {
 			timeStr = "a moment ago"
 		}
 
-		_, _ = ctx.Reply(update, ext.ReplyTextString(fmt.Sprintf("Sorry, i'm AFK (%s). Since %s", afkData["reason"], timeStr)), nil)
+		_, _ = ctx.Reply(update, ext.ReplyTextString(i18n.Localize(ctx, "AFKStatus", map[string]interface{}{"Reason": afkData["reason"], "Time": timeStr}, nil)), nil)
 	}
 
 	return nil

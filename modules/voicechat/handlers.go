@@ -2,7 +2,6 @@ package voicechat
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -12,77 +11,85 @@ import (
 	"github.com/pion/interceptor"
 	"github.com/pion/webrtc/v3"
 
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/utils"
 )
+
+func LeaveVCHandler(ctx *ext.Context, update *ext.Update) error {
+	uChat := update.EffectiveChat()
+	uMsg := update.EffectiveMessage
+
+	if uChat.IsAUser() {
+		return nil
+	}
+
+	state := getVCState(uChat.GetID())
+	state.mu.Lock()
+	defer state.mu.Unlock()
+	if state.pc == nil {
+		text := i18n.Localize(ctx, "VCNotJoined", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
+		return nil
+	}
+	if state.cancelPlay != nil {
+		state.cancelPlay()
+	}
+	_ = state.pc.Close()
+	state.pc = nil
+	state.audioTrack = nil
+	state.isPlaying = false
+	state.isPaused = false
+	state.isReady = false
+
+	call, err := getGroupCall(ctx, uChat.GetID())
+	if err == nil && call != nil {
+		_, _ = ctx.Raw.PhoneLeaveGroupCall(ctx, &tg.PhoneLeaveGroupCallRequest{
+			Call: call,
+		})
+	}
+
+	text := i18n.Localize(ctx, "VCLeftSuccess", nil, nil)
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
+	return nil
+}
 
 func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 	uChat := update.EffectiveChat()
 	uMsg := update.EffectiveMessage
 
 	if uChat.IsAUser() {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Error:</b> Voice chat is only supported in groups/supergroups/channels.")
+		text := i18n.Localize(ctx, "VCOnlyError", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
 		return nil
 	}
 
 	args := update.Args()
-	joinOn := true
 	if len(args) > 0 {
 		arg := strings.ToLower(args[0])
 		if arg == "off" || arg == "stop" {
-			joinOn = false
+			return LeaveVCHandler(ctx, update)
 		}
-	}
-
-	if len(update.Args()) == 0 && strings.HasPrefix(strings.ToLower(uMsg.Text), ".leavevc") {
-		joinOn = false
 	}
 
 	state := getVCState(uChat.GetID())
 
-	if !joinOn {
-		state.mu.Lock()
-		defer state.mu.Unlock()
-		if state.pc == nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "ℹ️ Bot is not currently in a Voice Chat.")
-			return nil
-		}
-		if state.cancelPlay != nil {
-			state.cancelPlay()
-		}
-		_ = state.pc.Close()
-		state.pc = nil
-		state.audioTrack = nil
-		state.isPlaying = false
-		state.isPaused = false
-		state.isReady = false
-
-		call, err := getGroupCall(ctx, uChat.GetID())
-		if err == nil && call != nil {
-			_, _ = ctx.Raw.PhoneLeaveGroupCall(ctx, &tg.PhoneLeaveGroupCallRequest{
-				Call: call,
-			})
-		}
-
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "✅ Successfully left the Voice Chat.")
-		return nil
-	}
-
 	state.mu.Lock()
 	if state.pc != nil {
 		state.mu.Unlock()
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "ℹ️ Bot is already in a Voice Chat.")
+		text := i18n.Localize(ctx, "VCAlreadyJoined", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
 		return nil
 	}
 	state.mu.Unlock()
 
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "⏳ <b>Joining Voice Chat...</b>")
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCJoining", nil, nil))
 
 	var groupCall *tg.InputGroupCall
 
 	call, err := getGroupCall(ctx, uChat.GetID())
 	if err != nil || call == nil {
 
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to get voice chat info:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedGetInfo", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -90,7 +97,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 
 	m := &webrtc.MediaEngine{}
 	if err := m.RegisterDefaultCodecs(); err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>MediaEngine error:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCMediaEngineError", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -100,7 +107,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 
 	i := &interceptor.Registry{}
 	if err := webrtc.RegisterDefaultInterceptors(m, i); err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Interceptor registry error:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCInterceptorError", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 	i.Add(&TelegramVoIPInterceptorFactory{})
@@ -125,7 +132,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		},
 	})
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to create peer connection:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedPeerConn", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -164,7 +171,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to create audio track:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedAudioTrack", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -183,7 +190,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to add track:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedAddTrack", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -202,7 +209,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to create offer:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedCreateOffer", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 	if err := pc.SetLocalDescription(offer); err != nil {
@@ -210,7 +217,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to set local description:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedSetLocalDesc", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -238,7 +245,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 	})
 	if err != nil {
 		_ = pc.Close()
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to join group call via Telegram:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedJoinCall", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -265,7 +272,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Did not receive voice chat connection parameters from Telegram.</b>")
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCMissingConnParams", nil, nil))
 		return nil
 	}
 
@@ -275,7 +282,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to parse Telegram connection params:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedParseParams", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -290,7 +297,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to set remote description:</b> %v", err))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedSetRemoteDesc", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -299,7 +306,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 	state.audioTrack = audioTrack
 	state.mu.Unlock()
 
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "✅ <b>Successfully joined Voice Chat!</b>")
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCJoinSuccess", nil, nil))
 	return nil
 }
 
@@ -313,12 +320,12 @@ func PauseHandler(ctx *ext.Context, update *ext.Update) error {
 	defer state.mu.Unlock()
 
 	if !state.isPlaying {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "ℹ️ No audio is currently playing.")
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCNoAudioPlaying", nil, nil))
 		return nil
 	}
 
 	state.isPaused = true
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "⏸️ <b>Audio playback paused.</b>")
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCPaybackPaused", nil, nil))
 	return nil
 }
 
@@ -332,12 +339,12 @@ func ResumeHandler(ctx *ext.Context, update *ext.Update) error {
 	defer state.mu.Unlock()
 
 	if !state.isPlaying {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "ℹ️ No audio is currently playing.")
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCNoAudioPlaying", nil, nil))
 		return nil
 	}
 
 	state.isPaused = false
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "▶️ <b>Audio playback resumed.</b>")
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCPaybackResumed", nil, nil))
 	return nil
 }
 
@@ -350,12 +357,15 @@ func StopHandler(ctx *ext.Context, update *ext.Update) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
+	state.isStopped = true
+	state.Playlist = nil
 	if state.cancelPlay != nil {
 		state.cancelPlay()
 	}
 	state.isPlaying = false
 	state.isPaused = false
 
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "⏹️ <b>Playback stopped.</b>")
+	text := i18n.Localize(ctx, "VCPlaybackStopped", nil, nil)
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
 	return nil
 }

@@ -2,18 +2,18 @@ package manager
 
 import (
 	"context"
+	"errors"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 )
 
-// ModuleHandler adalah handler untuk command userbot
+var ErrNotMatched = errors.New("query not matched")
+
 type ModuleHandler func(ctx *ext.Context, update *ext.Update) error
 
-// InlineQueryHandler adalah handler untuk inline query (@bot <query>)
 type InlineQueryHandler func(ctx context.Context, query *tg.UpdateBotInlineQuery) error
 
-// CallbackQuery merepresentasikan callback query yang disatukan (dari normal / inline message)
 type CallbackQuery struct {
 	QueryID         int64
 	UserID          int64
@@ -25,7 +25,6 @@ type CallbackQuery struct {
 	IsInline        bool
 }
 
-// CallbackQueryHandler adalah handler untuk callback query (tombol ditekan)
 type CallbackQueryHandler func(ctx context.Context, query *CallbackQuery) error
 
 type Module struct {
@@ -34,15 +33,12 @@ type Module struct {
 	Commands    []string
 	OnlyOut     bool
 
-	// Userbot handlers
 	Handler   ModuleHandler
 	OnMessage ModuleHandler
 
-	// Bot companion handlers
 	CallbackPrefix  string
 	CallbackHandler CallbackQueryHandler
 
-	// InlineHandler dipanggil saat user ketik @bot <query>
 	InlineHandler InlineQueryHandler
 }
 

@@ -16,6 +16,7 @@ import (
 	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -227,7 +228,7 @@ func uploadAndSendMedia(ctx *ext.Context, chatID int64, triggerMsgID int, output
 	uploadedFile, err := uploaderHelper.FromPath(ctx, outputPath)
 	if err != nil {
 		slog.Error("status: failed to upload file", "error", err)
-		_, _ = utils.EditMessageHTML(ctx, chatID, triggerMsgID, fmt.Sprintf("<b>❌ failed upload file to Telegram:</b> <code>%v</code>", err))
+		_, _ = utils.EditMessageHTML(ctx, chatID, triggerMsgID, i18n.Localize(ctx, "DownloadFailedUpload", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 	slog.Info("status: upload file success")
@@ -309,7 +310,10 @@ func uploadAndSendMedia(ctx *ext.Context, chatID int64, triggerMsgID int, output
 		return err
 	}
 
-	htmlText := fmt.Sprintf("✅ <b>%s Download Completed!</b>\n📄 <b>File Name:</b> <code>%s</code>", meta.MediaTypeStr, meta.FileName)
+	htmlText := i18n.Localize(ctx, "DownloadCompleted", map[string]interface{}{
+		"Type": meta.MediaTypeStr,
+		"Name": meta.FileName,
+	}, nil)
 	text, entities := utils.ParseHTML(htmlText)
 
 	_, err = ctx.SendMedia(chatID, &tg.MessagesSendMediaRequest{
@@ -330,42 +334,45 @@ func uploadAndSendMedia(ctx *ext.Context, chatID int64, triggerMsgID int, output
 func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 	args := update.Args()
 	if len(args) < 2 {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, "<b>⚠️ Usage:</b> <code>.download [link_telegram]</code>")
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadUsage", nil, nil))
 		return fmt.Errorf("argument not found")
 	}
 
 	link := args[1]
 	slog.Info("Starting proses download link", "link", link)
 
-	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, "<i>🔍 analyze telegram link...</i>")
+	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadAnalyzing", nil, nil))
 
 	peer, isPrivate, msgID, err := parseLink(link)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("<b>❌ Failed to analyzed link:</b> <code>%v</code>", err))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
 	chatID, err := resolvePeer(ctx, peer, isPrivate)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("<b>❌ Failed to resolve chat:</b> <code>%v</code>", err))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedResolveChat", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
-	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, "<i>📥 Getting Telegram data...</i>")
+	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadGettingData", nil, nil))
 
 	msg, err := getMessage(ctx, chatID, msgID)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("<b>❌ Failed getting message:</b> <code>%v</code>", err))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
 	meta := determineFileInfo(msg)
 
-	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("<i>⚡ Downloading %s: <code>%s</code> ke server...</i>", meta.MediaTypeStr, meta.FileName))
+	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadDownloading", map[string]interface{}{
+		"Type": meta.MediaTypeStr,
+		"Name": meta.FileName,
+	}, nil))
 
 	err = os.MkdirAll("downloads", 0755)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("<b>❌ Failed creating folder downloads:\n\nTry to check permission</b> <code>%v</code>", err))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedMkdir", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
@@ -397,12 +404,12 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 	_, err = ctx.DownloadMedia(msg.Media, ext.DownloadOutputPath(outputPath), nil)
 	if err != nil {
 		slog.Error("status: Failed DownloadMedia", "error", err)
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("<b>❌ Failed to download media:</b> <code>%v</code>", err))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedDownloadMedia", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 	slog.Info("status: DownloadMedia success")
 
-	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("<i>📤 Uploading <code>%s</code> back to Telegram...</i>", meta.FileName))
+	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadUploading", map[string]interface{}{"Name": meta.FileName}, nil))
 
 	err = uploadAndSendMedia(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, outputPath, thumbPath, meta)
 	return err

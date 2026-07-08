@@ -1,10 +1,9 @@
 package admins
 
 import (
-	"fmt"
-
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -33,9 +32,9 @@ func purgeHandler(ctx *ext.Context, update *ext.Update) error {
 
 	canDelete, err := canDeleteMessages(ctx, uChat.GetID())
 	if err != nil || !canDelete {
-		errText := "❌ <b>Error:</b> You do not have permission to delete messages in this chat."
+		errText := i18n.Localize(ctx, "PurgeNoPermission", nil, nil)
 		if err != nil {
-			errText = fmt.Sprintf("❌ <b>Error checking permissions:</b> %s", err.Error())
+			errText = i18n.Localize(ctx, "PurgeCheckPermissionError", map[string]interface{}{"Error": err.Error()}, nil)
 		}
 		text, entities := utils.ParseHTML(errText)
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
@@ -48,7 +47,7 @@ func purgeHandler(ctx *ext.Context, update *ext.Update) error {
 
 	reply, ok := uMsg.ReplyTo.(*tg.MessageReplyHeader)
 	if !ok || reply.ReplyToMsgID == 0 {
-		text, entities := utils.ParseHTML("❌ <b>Please reply to a message to start purging from that message.</b>")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "PurgeReplyRequired", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -80,7 +79,7 @@ func purgeMeHandler(ctx *ext.Context, update *ext.Update) error {
 
 	reply, ok := uMsg.ReplyTo.(*tg.MessageReplyHeader)
 	if !ok || reply.ReplyToMsgID == 0 {
-		text, entities := utils.ParseHTML("❌ <b>Please reply to a message to start purgeme from that message.</b>")
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "PurgemeReplyRequired", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -96,7 +95,7 @@ func purgeMeHandler(ctx *ext.Context, update *ext.Update) error {
 
 	inputPeer, errPeer := ctx.ResolveInputPeerById(uChat.GetID())
 	if errPeer != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Failed to resolve Chat:</b> %s", errPeer.Error()))
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "PurgeResolveChatFailed", map[string]interface{}{"Error": errPeer.Error()}, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,

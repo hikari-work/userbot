@@ -11,6 +11,7 @@ import (
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -195,8 +196,12 @@ func statusHandler(ctx *ext.Context, update *ext.Update) error {
 	ramStr := "N/A"
 	if err == nil {
 		ramPerc := (float64(memUsed) / float64(memTotal)) * 100.0
-		ramStr = fmt.Sprintf("\n  • Total: <code>%s</code>\n  • Used: <code>%s (%.1f%%)</code>\n  • Free: <code>%s</code>",
-			formatBytes(memTotal), formatBytes(memUsed), ramPerc, formatBytes(memAvail))
+		ramStr = i18n.Localize(ctx, "StatusRAMDetail", map[string]interface{}{
+			"Total": formatBytes(memTotal),
+			"Used":  formatBytes(memUsed),
+			"Perc":  fmt.Sprintf("%.1f", ramPerc),
+			"Free":  formatBytes(memAvail),
+		}, nil)
 	}
 
 	sysUptime, err := getSystemUptime()
@@ -218,23 +223,19 @@ func statusHandler(ctx *ext.Context, update *ext.Update) error {
 	goHeapIdle := formatBytes(m.HeapIdle)
 	gcCycles := m.NumGC
 
-	// Format teks HTML
-	htmlContent := fmt.Sprintf(
-		"<b> STATUS SERVER &amp; USERBOT</b>\n"+
-			"--------------------------------------------\n"+
-			"<b> CPU Usage:</b> <code>%.2f%%</code>\n"+
-			"<b> System RAM:</b>%s\n\n"+
-			"<b> Go Runtime Stats:</b>\n"+
-			"  • Goroutines: <code>%d</code>\n"+
-			"  • Go Memory Alloc: <code>%s</code> (sys: <code>%s</code>)\n"+
-			"  • Go Heap Alloc: <code>%s</code> (sys: <code>%s</code>)\n"+
-			"  • Go Heap Idle: <code>%s</code>\n"+
-			"  • Go GC Cycles: <code>%d</code>\n"+
-			"--------------------------------------------\n"+
-			"<b>⏰ Bot Uptime:</b> <code>%s</code>\n"+
-			"<b>⚙️ Sys Uptime:</b> <code>%s</code>",
-		cpuUsage, ramStr, goroutines, goAlloc, goSys, goHeapAlloc, goHeapSys, goHeapIdle, gcCycles, botUptime, sysUptime,
-	)
+	htmlContent := i18n.Localize(ctx, "StatusMessage", map[string]interface{}{
+		"CPU":         fmt.Sprintf("%.2f", cpuUsage),
+		"RAM":         ramStr,
+		"Goroutines":  goroutines,
+		"GoAlloc":     goAlloc,
+		"GoSys":       goSys,
+		"GoHeapAlloc": goHeapAlloc,
+		"GoHeapSys":   goHeapSys,
+		"GoHeapIdle":  goHeapIdle,
+		"GcCycles":    gcCycles,
+		"BotUptime":   botUptime,
+		"SysUptime":   sysUptime,
+	}, nil)
 
 	text, entities := utils.ParseHTML(htmlContent)
 	_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{

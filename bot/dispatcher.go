@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"strings"
 
@@ -53,6 +54,9 @@ func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
 			continue
 		}
 		if err := mod.InlineHandler(ctx, q); err != nil {
+			if errors.Is(err, manager.ErrNotMatched) {
+				continue
+			}
 			slog.Error("Bot: error pada InlineHandler", "module", mod.Name, "error", err)
 			continue
 		}

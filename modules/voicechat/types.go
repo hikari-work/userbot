@@ -3,9 +3,15 @@ package voicechat
 import (
 	"sync"
 
+	"github.com/celestix/gotgproto/ext"
 	"github.com/pion/webrtc/v3"
 	"golang.org/x/net/context"
 )
+
+type PlaylistItem struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
 
 type State struct {
 	pc         *webrtc.PeerConnection
@@ -15,6 +21,12 @@ type State struct {
 	isPaused   bool
 	isPlaying  bool
 	isReady    bool
+
+	Playlist  []PlaylistItem
+	isStopped bool
+
+	extCtx    *ext.Context
+	extUpdate *ext.Update
 }
 
 type GroupJoinPayload struct {

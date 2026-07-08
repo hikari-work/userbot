@@ -1,7 +1,6 @@
 package admins
 
 import (
-	"context"
 	"fmt"
 	"html"
 	"regexp"
@@ -11,6 +10,7 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 	dbClient "github.com/hikari-work/userbot/connection"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -31,17 +31,15 @@ func blacklistHandler(ctx *ext.Context, update *ext.Update) error {
 	uMsg := update.EffectiveMessage
 
 	if uChat.IsAUser() {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Error:</b> Blacklist commands can only be used in groups or supergroups.")
+		localize := i18n.Localize(ctx, "BLErrorNotGroup", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 		return nil
 	}
 
 	args := update.Args()
 	if len(args) == 0 {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Usage:</b>\n"+
-			"• <code>.bl add [word/phrase]</code>\n"+
-			"• <code>.bl del [word/phrase]</code>\n"+
-			"• <code>.bl list</code>\n"+
-			"• <code>.bl clear</code>")
+		usageTxt := i18n.Localize(ctx, "BLUsage", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, usageTxt)
 		return nil
 	}
 
@@ -49,7 +47,8 @@ func blacklistHandler(ctx *ext.Context, update *ext.Update) error {
 	switch subCommand {
 	case "add":
 		if len(args) < 2 {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Usage:</b> <code>.bl add [word/phrase]</code>")
+			localize := i18n.Localize(ctx, "BLUsageAdd", nil, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return nil
 		}
 		word := strings.TrimSpace(strings.Join(args[1:], " "))
@@ -58,24 +57,34 @@ func blacklistHandler(ctx *ext.Context, update *ext.Update) error {
 		}
 
 		if _, err := regexp.Compile("(?i)" + word); err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Invalid regex pattern:</b> %s", err.Error()))
+			localize := i18n.Localize(ctx, "BLInvalidRegex", map[string]interface{}{
+				"Error": err.Error(),
+			}, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return nil
 		}
 
-		ctxBg := context.Background()
+		ctxBg := ctx
 		key := fmt.Sprintf("userbot:blacklist:%d", uChat.GetID())
 		err := dbClient.Redis.SAdd(ctxBg, key, word).Err()
 		if err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to add pattern to blacklist:</b> %s", err.Error()))
+			localize := i18n.Localize(ctx, "BLFailedPattern", map[string]interface{}{
+				"Error": err.Error(),
+			}, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return err
 		}
 
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("✅ Added regex pattern <code>%s</code> to the blacklist.", html.EscapeString(word)))
+		localize := i18n.Localize(ctx, "BLSuccess", map[string]interface{}{
+			"Regex": html.EscapeString(word),
+		}, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 		return nil
 
 	case "del", "remove", "delete":
 		if len(args) < 2 {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Usage:</b> <code>.bl del [word/phrase]</code>")
+			localize := i18n.Localize(ctx, "BLUsageDel", nil, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return nil
 		}
 		word := strings.TrimSpace(strings.Join(args[1:], " "))
@@ -83,11 +92,12 @@ func blacklistHandler(ctx *ext.Context, update *ext.Update) error {
 			return nil
 		}
 
-		ctxBg := context.Background()
+		ctxBg := ctx
 		key := fmt.Sprintf("userbot:blacklist:%d", uChat.GetID())
 		removed, err := dbClient.Redis.SRem(ctxBg, key, word).Result()
 		if err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to remove pattern from blacklist:</b> %s", err.Error()))
+			localize := i18n.Localize(ctx, "BLFailedRemove", map[string]interface{}{"Error": err.Error()}, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return err
 		}
 
@@ -97,29 +107,33 @@ func blacklistHandler(ctx *ext.Context, update *ext.Update) error {
 		}
 
 		if removed == 0 {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("ℹ️ <code>%s</code> was not in the blacklist.", html.EscapeString(word)))
+			localize := i18n.Localize(ctx, "BLNotFound", map[string]interface{}{"Word": html.EscapeString(word)}, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return nil
 		}
 
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("✅ Removed pattern <code>%s</code> from the blacklist.", html.EscapeString(word)))
+		localize := i18n.Localize(ctx, "BLSuccessRemove", map[string]interface{}{"Word": html.EscapeString(word)}, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 		return nil
 
 	case "list":
-		ctxBg := context.Background()
+		ctxBg := ctx
 		key := fmt.Sprintf("userbot:blacklist:%d", uChat.GetID())
 		words, err := dbClient.Redis.SMembers(ctxBg, key).Result()
 		if err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to retrieve blacklist:</b> %s", err.Error()))
+			localize := i18n.Localize(ctx, "BLFailedRetrieve", map[string]interface{}{"Error": err.Error()}, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return err
 		}
 
 		if len(words) == 0 {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "ℹ️ <b>Blacklist is empty in this chat.</b>")
+			localize := i18n.Localize(ctx, "BLEmpty", nil, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return nil
 		}
 
 		var sb strings.Builder
-		sb.WriteString("📋 <b>Blacklisted words/phrases in this chat:</b>\n")
+		sb.WriteString(i18n.Localize(ctx, "BLListHeader", nil, nil))
 		for i, w := range words {
 			sb.WriteString(fmt.Sprintf("%d. <code>%s</code>\n", i+1, html.EscapeString(w)))
 		}
@@ -128,19 +142,22 @@ func blacklistHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 
 	case "clear":
-		ctxBg := context.Background()
+		ctxBg := ctx
 		key := fmt.Sprintf("userbot:blacklist:%d", uChat.GetID())
 		err := dbClient.Redis.Del(ctxBg, key).Err()
 		if err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Failed to clear blacklist:</b> %s", err.Error()))
+			localize := i18n.Localize(ctx, "BLFailedClear", map[string]interface{}{"Error": err.Error()}, nil)
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return err
 		}
 
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "✅ <b>Blacklist cleared successfully for this chat!</b>")
+		localize := i18n.Localize(ctx, "BLSuccessClear", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 		return nil
 
 	default:
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Unknown subcommand.</b>\nUsage:\n• <code>.bl add [word]</code>\n• <code>.bl del [word]</code>\n• <code>.bl list</code>\n• <code>.bl clear</code>")
+		localize := i18n.Localize(ctx, "BLUnknownSubcommand", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 		return nil
 	}
 }
@@ -163,7 +180,7 @@ func blacklistMessageHook(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	ctxBg := context.Background()
+	ctxBg := ctx
 	key := fmt.Sprintf("userbot:blacklist:%d", uChat.GetID())
 	words, err := dbClient.Redis.SMembers(ctxBg, key).Result()
 	if err != nil || len(words) == 0 {
@@ -200,9 +217,10 @@ func blacklistMessageHook(ctx *ext.Context, update *ext.Update) error {
 			return err
 		}
 
-		warnMsg := fmt.Sprintf("🚨 <b>Blacklist Triggered!</b>\n"+
-			"User <code>%d</code> sent a message containing a blacklisted word: <code>%s</code>. The message has been deleted.",
-			userID, html.EscapeString(matchedWord))
+		warnMsg := i18n.Localize(ctx, "BLTriggered", map[string]interface{}{
+			"UserId": userID,
+			"Word":   html.EscapeString(matchedWord),
+		}, nil)
 
 		text, entities := utils.ParseHTML(warnMsg)
 		sentMsg, errSent := ctx.SendMessage(uChat.GetID(), &tg.MessagesSendMessageRequest{

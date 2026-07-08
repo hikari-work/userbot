@@ -3,7 +3,6 @@ package bot
 import (
 	"context"
 	"fmt"
-	"math/rand"
 
 	"github.com/gotd/td/tg"
 
@@ -15,29 +14,6 @@ type Button struct {
 	CallbackData string
 	URL          string
 	SwitchInline string
-}
-
-func SendWithButtons(peer tg.InputPeerClass, text string, rows [][]Button) error {
-	b := getInstance()
-	if b == nil || b.api == nil {
-		return fmt.Errorf("bot companion tidak aktif")
-	}
-
-	markup := buildInlineKeyboard(rows)
-	parsedText, entities := utils.ParseHTML(text)
-
-	req := &tg.MessagesSendMessageRequest{
-		Peer:        peer,
-		Message:     parsedText,
-		ReplyMarkup: markup,
-		RandomID:    rand.Int63(),
-	}
-	if len(entities) > 0 {
-		req.SetEntities(entities)
-	}
-
-	_, err := b.api.MessagesSendMessage(context.Background(), req)
-	return err
 }
 
 func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]Button) error {
@@ -65,28 +41,6 @@ func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]But
 
 	_, err := b.api.MessagesEditMessage(context.Background(), req)
 	return err
-}
-
-func DeleteBotMessage(peer tg.InputPeerClass, msgID int) error {
-	b := getInstance()
-	if b == nil || b.api == nil {
-		return fmt.Errorf("bot companion tidak aktif")
-	}
-
-	switch p := peer.(type) {
-	case *tg.InputPeerChannel:
-		_, err := b.api.ChannelsDeleteMessages(context.Background(), &tg.ChannelsDeleteMessagesRequest{
-			Channel: &tg.InputChannel{ChannelID: p.ChannelID, AccessHash: p.AccessHash},
-			ID:      []int{msgID},
-		})
-		return err
-	default:
-		_, err := b.api.MessagesDeleteMessages(context.Background(), &tg.MessagesDeleteMessagesRequest{
-			ID:     []int{msgID},
-			Revoke: true,
-		})
-		return err
-	}
 }
 
 func DeleteMessageWithUserbot(chatID int64, msgID int) error {

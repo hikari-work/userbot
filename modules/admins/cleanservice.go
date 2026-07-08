@@ -1,13 +1,13 @@
 package admins
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 	dbClient "github.com/hikari-work/userbot/connection"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -28,12 +28,12 @@ func cleanServiceHandler(ctx *ext.Context, update *ext.Update) error {
 	uMsg := update.EffectiveMessage
 
 	if uChat.IsAUser() {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Error:</b> CleanService can only be used in groups or supergroups.")
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "CSOnlyGroupError", nil, nil))
 		return nil
 	}
 
 	args := update.Args()
-	ctxBg := context.Background()
+	ctxBg := ctx
 	key := fmt.Sprintf("userbot:cleanservice:%d", uChat.GetID())
 
 	var status bool
@@ -48,7 +48,7 @@ func cleanServiceHandler(ctx *ext.Context, update *ext.Update) error {
 			err = dbClient.Redis.Del(ctxBg, key).Err()
 			status = false
 		} else {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Usage:</b> <code>.cleanservice [on/off]</code>")
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "CSUsage", nil, nil))
 			return nil
 		}
 	} else {
@@ -65,15 +65,19 @@ func cleanServiceHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Error updating CleanService setting:</b> %s", err.Error()))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "CSErrorUpdate", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
-	statusStr := "<b>DISABLED</b>"
+	var statusKey string
 	if status {
-		statusStr = "<b>ENABLED</b>"
+		statusKey = "CSEnabled"
+	} else {
+		statusKey = "CSDisabled"
 	}
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("✅ CleanService (auto-deleting user join/left messages) has been %s for this chat.", statusStr))
+	statusStr := i18n.Localize(ctx, statusKey, nil, nil)
+	msgStr := i18n.Localize(ctx, "CSStatusChange", map[string]interface{}{"Status": statusStr}, nil)
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, msgStr)
 	return nil
 }
 
@@ -109,7 +113,7 @@ func cleanServiceMessageHook(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	ctxBg := context.Background()
+	ctxBg := ctx
 	key := fmt.Sprintf("userbot:cleanservice:%d", uChat.GetID())
 
 	enabled, err := dbClient.Redis.Exists(ctxBg, key).Result()

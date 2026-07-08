@@ -1,12 +1,12 @@
 package admins
 
 import (
-	"fmt"
 	"log/slog"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/utils"
 )
 
@@ -15,7 +15,7 @@ func getTargetUser(ctx *ext.Context, update *ext.Update, actionName string) (int
 	msg := update.EffectiveMessage
 
 	if chat.IsAUser() {
-		html, classes := utils.ParseHTML("❌ This command can only be used in a group or supergroup.")
+		html, classes := utils.ParseHTML(i18n.Localize(ctx, "OnlyGroupError", nil, nil))
 		_, err := ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       msg.ID,
 			Message:  html,
@@ -27,10 +27,13 @@ func getTargetUser(ctx *ext.Context, update *ext.Update, actionName string) (int
 		return 0, false
 	}
 
-	// 2. Extract the target user using utils.ExtractUser
 	target, err := utils.ExtractUser(ctx, msg, chat)
 	if err != nil {
-		html, classes := utils.ParseHTML(fmt.Sprintf("❌ <b>Failed to get target user for %s:</b> %s", actionName, err.Error()))
+		actionLoc := i18n.Localize(ctx, "action_"+actionName, nil, nil)
+		html, classes := utils.ParseHTML(i18n.Localize(ctx, "FailedGetTargetUser", map[string]interface{}{
+			"Action": actionLoc,
+			"Error":  err.Error(),
+		}, nil))
 		_, editErr := ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       msg.ID,
 			Message:  html,

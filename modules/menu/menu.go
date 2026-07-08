@@ -18,6 +18,7 @@ import (
 
 	"github.com/hikari-work/userbot/bot"
 	dbClient "github.com/hikari-work/userbot/connection"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -52,21 +53,21 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 
 	if !bot.IsActive() {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			"⚠️ <b>Bot Companion tidak aktif.</b>\nSet <code>BOT_TOKEN</code> di .env untuk menggunakan fitur inline menu.")
+			i18n.Localize(ctx, "MenuBotNotActive", nil, nil))
 		return nil
 	}
 
-	botUsername := bot.BotUsername
+	botUsername := bot.Username
 	if botUsername == "" {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			"⚠️ <b>Bot Username belum didapatkan.</b> Harap tunggu beberapa detik saat startup.")
+			i18n.Localize(ctx, "MenuBotUsernameMissing", nil, nil))
 		return nil
 	}
 
 	botInputPeer, err := ctx.ResolveUsername(botUsername)
 	if err != nil {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			"❌ <b>Gagal resolve bot username:</b> "+err.Error())
+			i18n.Localize(ctx, "MenuFailedResolveUsername", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -128,7 +129,7 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 
 func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 	if !strings.HasPrefix(q.Query, "menu") {
-		return nil
+		return manager.ErrNotMatched
 	}
 
 	var chatID int64
@@ -137,7 +138,7 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 		chatID, _ = strconv.ParseInt(parts[1], 10, 64)
 	}
 
-	text, buttons := getModulesPage(0, chatID)
+	text, buttons := getModulesPage(ctx, 0, chatID)
 	keyboard := bot.BuildInlineKeyboard(buttons)
 
 	plainText, entities := utils.ParseHTML(text)
@@ -152,8 +153,8 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 			NoWebpage:   true,
 		},
 	}
-	result.SetTitle("Menu Utama Userbot")
-	result.SetDescription("Klik di sini untuk mengirim menu utama")
+	result.SetTitle(i18n.Localize(ctx, "MenuInlineTitle", nil, nil))
+	result.SetDescription(i18n.Localize(ctx, "MenuInlineDesc", nil, nil))
 
 	results := []tg.InputBotInlineResultClass{result}
 
@@ -166,12 +167,12 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	if strings.HasPrefix(payload, "page:") {
 		parts := strings.Split(strings.TrimPrefix(payload, "page:"), ":")
 		if len(parts) < 2 {
-			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Detail page tidak valid.", false)
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize(ctx, "MenuInvalidPage", nil, nil), false)
 		}
 		pageNum, _ := strconv.Atoi(parts[0])
 		chatID, _ := strconv.ParseInt(parts[1], 10, 64)
 
-		text, buttons := getModulesPage(pageNum, chatID)
+		text, buttons := getModulesPage(ctx, pageNum, chatID)
 		if q.IsInline {
 			_ = bot.EditInlineBotMessage(q.InlineMessageID, text, buttons)
 		} else {
@@ -184,13 +185,13 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	if strings.HasPrefix(payload, "mod:") {
 		parts := strings.Split(strings.TrimPrefix(payload, "mod:"), ":")
 		if len(parts) < 3 {
-			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Detail modul tidak valid.", false)
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize(ctx, "MenuInvalidModule", nil, nil), false)
 		}
 		modID := parts[0]
 		fromPageStr := parts[1]
 		chatID, _ := strconv.ParseInt(parts[2], 10, 64)
 
-		logicalMods := getLogicalModules()
+		logicalMods := getLogicalModules(ctx)
 		var targetMod *LogicalModule
 		for i := range logicalMods {
 			if logicalMods[i].ID == modID {
@@ -200,10 +201,10 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		}
 
 		if targetMod == nil {
-			return bot.AnswerCallbackQuery(ctx, q.QueryID, "Modul tidak ditemukan.", false)
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize(ctx, "MenuModuleNotFound", nil, nil), false)
 		}
 
-		text, buttons := getModuleDetail(targetMod, fromPageStr, chatID)
+		text, buttons := getModuleDetail(ctx, targetMod, fromPageStr, chatID)
 		if q.IsInline {
 			_ = bot.EditInlineBotMessage(q.InlineMessageID, text, buttons)
 		} else {
@@ -281,27 +282,27 @@ func getPackageName(handler interface{}) string {
 	return ""
 }
 
-func getLogicalModules() []LogicalModule {
+func getLogicalModules(ctx context.Context) []LogicalModule {
 	prettyNames := map[string]string{
-		"admins":    "👮 Admins",
-		"afk":       "💤 AFK",
-		"antiflood": "🛡️ Antiflood",
-		"download":  "📥 Download",
-		"ping":      "🏓 Ping",
-		"prefix":    "⚙️ Prefix",
-		"status":    "ℹ️ Status",
-		"voicechat": "🎵 Voice Chat",
+		"admins":    i18n.Localize(ctx, "module_name_admins", nil, nil),
+		"afk":       i18n.Localize(ctx, "module_name_afk", nil, nil),
+		"antiflood": i18n.Localize(ctx, "module_name_antiflood", nil, nil),
+		"download":  i18n.Localize(ctx, "module_name_download", nil, nil),
+		"ping":      i18n.Localize(ctx, "module_name_ping", nil, nil),
+		"prefix":    i18n.Localize(ctx, "module_name_prefix", nil, nil),
+		"status":    i18n.Localize(ctx, "module_name_status", nil, nil),
+		"voicechat": i18n.Localize(ctx, "module_name_voicechat", nil, nil),
 	}
 
 	prettyDescriptions := map[string]string{
-		"admins":    "Mengelola administrasi grup (ban, kick, promote, dll.)",
-		"afk":       "Mengatur status Away From Keyboard (AFK) saat Anda tidak aktif",
-		"antiflood": "Mengamankan grup dari spamming/flood pesan",
-		"download":  "Mengunduh file atau media dari link internet secara langsung",
-		"ping":      "Memeriksa kecepatan respon (latensi) userbot ke Telegram",
-		"prefix":    "Mengubah prefix (simbol pemicu) untuk semua command userbot",
-		"status":    "Melihat status sistem, versi, uptime, dan info sistem lainnya",
-		"voicechat": "Mengontrol pemutaran musik/audio secara real-time di voice chat grup",
+		"admins":    i18n.Localize(ctx, "module_desc_admins", nil, nil),
+		"afk":       i18n.Localize(ctx, "module_desc_afk", nil, nil),
+		"antiflood": i18n.Localize(ctx, "module_desc_antiflood", nil, nil),
+		"download":  i18n.Localize(ctx, "module_desc_download", nil, nil),
+		"ping":      i18n.Localize(ctx, "module_desc_ping", nil, nil),
+		"prefix":    i18n.Localize(ctx, "module_desc_prefix", nil, nil),
+		"status":    i18n.Localize(ctx, "module_desc_status", nil, nil),
+		"voicechat": i18n.Localize(ctx, "module_desc_voicechat", nil, nil),
 	}
 
 	groups := make(map[string]*LogicalModule)
@@ -323,7 +324,7 @@ func getLogicalModules() []LogicalModule {
 		if !exists {
 			name, ok := prettyNames[pkgName]
 			if !ok {
-				name = strings.Title(pkgName)
+				name = strings.ToTitle(pkgName)
 			}
 			desc := prettyDescriptions[pkgName]
 			if desc == "" {
@@ -365,8 +366,8 @@ func getLogicalModules() []LogicalModule {
 	return list
 }
 
-func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
-	logicalMods := getLogicalModules()
+func getModulesPage(ctx context.Context, page int, chatID int64) (string, [][]bot.Button) {
+	logicalMods := getLogicalModules(ctx)
 	totalModules := len(logicalMods)
 
 	totalPages := (totalModules + pageSize - 1) / pageSize
@@ -409,19 +410,33 @@ func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 	nextPage := page + 1
 
 	navRow := []bot.Button{
-		{Text: "◀️ Prev", CallbackData: fmt.Sprintf("menu:page:%d:%d", prevPage, chatID)},
-		{Text: "❌ Close", CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
-		{Text: "▶️ Next", CallbackData: fmt.Sprintf("menu:page:%d:%d", nextPage, chatID)},
+		{Text: i18n.Localize(ctx, "MenuPrevBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%d:%d", prevPage, chatID)},
+		{Text: i18n.Localize(ctx, "MenuCloseBtn", nil, nil), CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
+		{Text: i18n.Localize(ctx, "MenuNextBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%d:%d", nextPage, chatID)},
 	}
 	modRows = append(modRows, navRow)
 
-	text := fmt.Sprintf("📦 <b>Daftar Modul Userbot</b> (Hal %d/%d)\n\nSilakan pilih modul di bawah untuk melihat detail commands:", page+1, totalPages)
+	text := i18n.Localize(ctx, "MenuListText", map[string]interface{}{
+		"Page":  page + 1,
+		"Total": totalPages,
+	}, nil)
 
 	return text, modRows
 }
 
-func getModuleDetail(mod *LogicalModule, fromPage string, chatID int64) (string, [][]bot.Button) {
-	prefix, err := dbClient.Redis.Get(context.Background(), "prefix").Result()
+func getCommandDescription(cmd string) string {
+	for _, mod := range manager.Registry {
+		for _, c := range mod.Commands {
+			if strings.EqualFold(c, cmd) {
+				return mod.Description
+			}
+		}
+	}
+	return ""
+}
+
+func getModuleDetail(ctx context.Context, mod *LogicalModule, fromPage string, chatID int64) (string, [][]bot.Button) {
+	prefix, err := dbClient.Redis.Get(ctx, "prefix").Result()
 	if err != nil || prefix == "" {
 		prefix = "."
 	}
@@ -429,38 +444,31 @@ func getModuleDetail(mod *LogicalModule, fromPage string, chatID int64) (string,
 	var cmdList []string
 	if len(mod.Commands) > 0 {
 		for _, cmd := range mod.Commands {
-			cmdList = append(cmdList, fmt.Sprintf("- <code>%s%s</code>", prefix, cmd))
+			desc := getCommandDescription(cmd)
+			if desc != "" {
+				cmdList = append(cmdList, fmt.Sprintf("- <code>%s%s</code> - %s", prefix, cmd, desc))
+			} else {
+				cmdList = append(cmdList, fmt.Sprintf("- <code>%s%s</code>", prefix, cmd))
+			}
 		}
 	} else {
-		cmdList = append(cmdList, "<i>Tidak ada direct command. Modul bekerja di latar belakang.</i>")
+		cmdList = append(cmdList, i18n.Localize(ctx, "MenuNoDirectCommands", nil, nil))
 	}
 
-	text := fmt.Sprintf("📦 <b>Modul: %s</b>\n\nℹ️ <i>%s</i>\n\n<b>Commands:</b>\n%s",
-		mod.Name, mod.Description, strings.Join(cmdList, "\n"))
+	text := i18n.Localize(ctx, "MenuModuleDetail", map[string]interface{}{
+		"Name":     mod.Name,
+		"Desc":     mod.Description,
+		"Commands": strings.Join(cmdList, "\n"),
+	}, nil)
 
 	buttons := [][]bot.Button{
 		{
-			{Text: "◀️ Back", CallbackData: fmt.Sprintf("menu:page:%s:%d", fromPage, chatID)},
-			{Text: "❌ Close", CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
+			{Text: i18n.Localize(ctx, "MenuBackBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%s:%d", fromPage, chatID)},
+			{Text: i18n.Localize(ctx, "MenuCloseBtn", nil, nil), CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
 		},
 	}
 
 	return text, buttons
-}
-
-func peerToID(peer tg.PeerClass) int64 {
-	if peer == nil {
-		return 0
-	}
-	switch p := peer.(type) {
-	case *tg.PeerUser:
-		return p.UserID
-	case *tg.PeerChat:
-		return -p.ChatID
-	case *tg.PeerChannel:
-		return -1_000_000_000_000 - p.ChannelID
-	}
-	return 0
 }
 
 func inputPeerFromID(chatID int64) tg.InputPeerClass {

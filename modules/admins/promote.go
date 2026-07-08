@@ -1,10 +1,9 @@
 package admins
 
 import (
-	"fmt"
-
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -29,7 +28,7 @@ func promoteHandler(ctx *ext.Context, update *ext.Update) error {
 	args := update.Args()
 	title := getAdminTitle(args, update.EffectiveMessage.ReplyTo != nil)
 
-	text, entities := utils.ParseHTML("⏳ <b>Promoting user...</b>")
+	text, entities := utils.ParseHTML(i18n.Localize(ctx, "PromoteLoading", nil, nil))
 	_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       update.EffectiveMessage.ID,
 		Message:  text,
@@ -63,7 +62,9 @@ func promoteHandler(ctx *ext.Context, update *ext.Update) error {
 
 	_, err := ctx.PromoteChatMember(chat.GetID(), target, opts)
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Failed to promote user:</b> %s", err.Error()))
+		text, entities := utils.ParseHTML(i18n.Localize(ctx, "PromoteFailed", map[string]interface{}{
+			"Error": err.Error(),
+		}, nil))
 		_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       update.EffectiveMessage.ID,
 			Message:  text,
@@ -72,9 +73,16 @@ func promoteHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 
-	successMsg := fmt.Sprintf("✅ User <code>%d</code> successfully promoted to Admin!", target)
+	var successMsg string
 	if title != "" {
-		successMsg = fmt.Sprintf("✅ User <code>%d</code> successfully promoted with title <b>%s</b>!", target, title)
+		successMsg = i18n.Localize(ctx, "PromoteSuccessTitle", map[string]interface{}{
+			"UserId": target,
+			"Title":  title,
+		}, nil)
+	} else {
+		successMsg = i18n.Localize(ctx, "PromoteSuccess", map[string]interface{}{
+			"UserId": target,
+		}, nil)
 	}
 
 	text, entities = utils.ParseHTML(successMsg)
