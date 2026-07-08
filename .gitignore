@@ -30,3 +30,4 @@ vendor/
 *.out
 .idea/
 PRD.md
+bot_session
