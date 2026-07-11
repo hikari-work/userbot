@@ -32,9 +32,9 @@ func purgeHandler(ctx *ext.Context, update *ext.Update) error {
 
 	canDelete, err := canDeleteMessages(ctx, uChat.GetID())
 	if err != nil || !canDelete {
-		errText := i18n.Localize(ctx, "PurgeNoPermission", nil, nil)
+		errText := i18n.Localize("PurgeNoPermission", nil, nil)
 		if err != nil {
-			errText = i18n.Localize(ctx, "PurgeCheckPermissionError", map[string]interface{}{"Error": err.Error()}, nil)
+			errText = i18n.Localize("PurgeCheckPermissionError", map[string]interface{}{"Error": err.Error()}, nil)
 		}
 		text, entities := utils.ParseHTML(errText)
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
@@ -47,7 +47,7 @@ func purgeHandler(ctx *ext.Context, update *ext.Update) error {
 
 	reply, ok := uMsg.ReplyTo.(*tg.MessageReplyHeader)
 	if !ok || reply.ReplyToMsgID == 0 {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "PurgeReplyRequired", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("PurgeReplyRequired", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -79,7 +79,7 @@ func purgeMeHandler(ctx *ext.Context, update *ext.Update) error {
 
 	reply, ok := uMsg.ReplyTo.(*tg.MessageReplyHeader)
 	if !ok || reply.ReplyToMsgID == 0 {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "PurgemeReplyRequired", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("PurgemeReplyRequired", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -95,7 +95,7 @@ func purgeMeHandler(ctx *ext.Context, update *ext.Update) error {
 
 	inputPeer, errPeer := ctx.ResolveInputPeerById(uChat.GetID())
 	if errPeer != nil {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "PurgeResolveChatFailed", map[string]interface{}{"Error": errPeer.Error()}, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("PurgeResolveChatFailed", map[string]interface{}{"Error": errPeer.Error()}, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,

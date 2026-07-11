@@ -333,7 +333,7 @@
     "other": "❌ <b>Interceptor registry error:</b> {{.Error}}"
   },
   "VCInvalidYouTube": {
-    "other": "❌ <b>Error:</b> Please provide a valid YouTube URL/ID, or reply to a message containing a YouTube link."
+    "other": "❌ <b>Error:</b> Please provide a valid URL, video/song title, or reply to a message containing a link."
   },
   "VCJoinSuccess": {
     "other": "✅ <b>Successfully joined Voice Chat!</b>"

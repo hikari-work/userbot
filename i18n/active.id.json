@@ -333,7 +333,7 @@
     "other": "❌ <b>Error registri interceptor:</b> {{.Error}}"
   },
   "VCInvalidYouTube": {
-    "other": "❌ <b>Error:</b> Harap berikan URL/ID YouTube yang valid, atau balas pesan yang berisi tautan YouTube."
+    "other": "❌ <b>Error:</b> Harap berikan URL, judul video/lagu yang valid, atau balas pesan yang berisi tautan."
   },
   "VCJoinSuccess": {
     "other": "✅ <b>Berhasil bergabung dengan Voice Chat!</b>"

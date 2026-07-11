@@ -51,16 +51,16 @@ func PlayHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if youtubeURL == "" {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCInvalidYouTube", nil, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCInvalidYouTube", nil, nil))
 		return nil
 	}
 
-	textFetching := i18n.Localize(ctx, "VCFetchingInfo", nil, nil)
+	textFetching := i18n.Localize("VCFetchingInfo", nil, nil)
 	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, textFetching)
 
 	items, err := getPlaylistItems(youtubeURL)
 	if err != nil || len(items) == 0 {
-		textFailed := i18n.Localize(ctx, "VCFetchFailed", nil, nil)
+		textFailed := i18n.Localize("VCFetchFailed", nil, nil)
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, textFailed)
 		return nil
 	}
@@ -77,12 +77,12 @@ func PlayHandler(ctx *ext.Context, update *ext.Update) error {
 
 	if isPlaying {
 		if len(items) == 1 {
-			textAdded := i18n.Localize(ctx, "VCAddedToPlaylist", map[string]interface{}{
+			textAdded := i18n.Localize("VCAddedToPlaylist", map[string]interface{}{
 				"Title": html.EscapeString(items[0].Title),
 			}, nil)
 			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, textAdded)
 		} else {
-			textAddedCount := i18n.Localize(ctx, "VCAddedSongsCount", map[string]interface{}{
+			textAddedCount := i18n.Localize("VCAddedSongsCount", map[string]interface{}{
 				"Count": len(items),
 			}, nil)
 			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, textAddedCount)
@@ -155,7 +155,7 @@ func streamAudio(pCtx context.Context, state *State, youtubeURL string) {
 		"-f", "bestaudio",
 		"--no-playlist",
 		"--no-warnings",
-		"-o", "-", // output ke stdout
+		"-o", "-",
 		youtubeURL,
 	)
 	ytdlpCmd.Stderr = os.Stderr
@@ -279,8 +279,13 @@ func streamAudio(pCtx context.Context, state *State, youtubeURL string) {
 }
 
 func getPlaylistItems(youtubeURL string) ([]PlaylistItem, error) {
-	if !strings.Contains(youtubeURL, "youtube.com/") && !strings.Contains(youtubeURL, "youtu.be/") && len(youtubeURL) != 11 {
-		return []PlaylistItem{{URL: youtubeURL, Title: "Audio Stream"}}, nil
+	if youtubeURL == "" {
+		return nil, fmt.Errorf("empty URL")
+	}
+
+	fallbackTitle := "Audio Stream"
+	if strings.Contains(youtubeURL, "youtube") || strings.Contains(youtubeURL, "youtu.be") || len(youtubeURL) == 11 {
+		fallbackTitle = "YouTube Audio"
 	}
 
 	cmd := exec.Command("yt-dlp", "--flat-playlist", "--print", "url", "--print", "title", "--no-warnings", youtubeURL)
@@ -292,7 +297,7 @@ func getPlaylistItems(youtubeURL string) ([]PlaylistItem, error) {
 		titleOutput, _ := titleCmd.Output()
 		title := strings.TrimSpace(string(titleOutput))
 		if title == "" {
-			title = "YouTube Audio"
+			title = fallbackTitle
 		}
 		return []PlaylistItem{{URL: youtubeURL, Title: title}}, nil
 	}
@@ -304,7 +309,7 @@ func getPlaylistItems(youtubeURL string) ([]PlaylistItem, error) {
 		if url == "" {
 			continue
 		}
-		title := "YouTube Audio"
+		title := fallbackTitle
 		if i+1 < len(lines) {
 			title = strings.TrimSpace(lines[i+1])
 		}
@@ -314,7 +319,7 @@ func getPlaylistItems(youtubeURL string) ([]PlaylistItem, error) {
 		})
 	}
 	if len(items) == 0 {
-		return []PlaylistItem{{URL: youtubeURL, Title: "YouTube Audio"}}, nil
+		return []PlaylistItem{{URL: youtubeURL, Title: fallbackTitle}}, nil
 	}
 	return items, nil
 }
@@ -329,7 +334,7 @@ func playLoop(ctx *ext.Context, update *ext.Update, chatID int64) {
 			state.isPlaying = false
 			state.mu.Unlock()
 
-			textFinished := i18n.Localize(ctx, "VCPlaybackFinished", nil, nil)
+			textFinished := i18n.Localize("VCPlaybackFinished", nil, nil)
 			text, entities := utils.ParseHTML(textFinished)
 			_, _ = ctx.EditMessage(chatID, &tg.MessagesEditMessageRequest{
 				ID:       uMsg.ID,
@@ -348,14 +353,14 @@ func playLoop(ctx *ext.Context, update *ext.Update, chatID int64) {
 		state.isPaused = false
 		state.mu.Unlock()
 
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "VCNowStreaming", map[string]interface{}{"Title": html.EscapeString(item.Title)}, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("VCNowStreaming", map[string]interface{}{"Title": html.EscapeString(item.Title)}, nil))
 		sentMsg, editErr := ctx.EditMessage(chatID, &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
 			Entities: entities,
 		})
 		if editErr != nil {
-			newMsg, err := ctx.Reply(update, ext.ReplyTextString(i18n.Localize(ctx, "VCNowStreamingRaw", map[string]interface{}{"Title": item.Title}, nil)), nil)
+			newMsg, err := ctx.Reply(update, ext.ReplyTextString(i18n.Localize("VCNowStreamingRaw", map[string]interface{}{"Title": item.Title}, nil)), nil)
 			if err == nil {
 				uMsg = newMsg
 			}

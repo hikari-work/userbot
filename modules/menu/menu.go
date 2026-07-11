@@ -53,21 +53,21 @@ func menuHandler(ctx *ext.Context, update *ext.Update) error {
 
 	if !bot.IsActive() {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			i18n.Localize(ctx, "MenuBotNotActive", nil, nil))
+			i18n.Localize("MenuBotNotActive", nil, nil))
 		return nil
 	}
 
 	botUsername := bot.Username
 	if botUsername == "" {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			i18n.Localize(ctx, "MenuBotUsernameMissing", nil, nil))
+			i18n.Localize("MenuBotUsernameMissing", nil, nil))
 		return nil
 	}
 
 	botInputPeer, err := ctx.ResolveUsername(botUsername)
 	if err != nil {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			i18n.Localize(ctx, "MenuFailedResolveUsername", map[string]interface{}{"Error": err.Error()}, nil))
+			i18n.Localize("MenuFailedResolveUsername", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -153,8 +153,8 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 			NoWebpage:   true,
 		},
 	}
-	result.SetTitle(i18n.Localize(ctx, "MenuInlineTitle", nil, nil))
-	result.SetDescription(i18n.Localize(ctx, "MenuInlineDesc", nil, nil))
+	result.SetTitle(i18n.Localize("MenuInlineTitle", nil, nil))
+	result.SetDescription(i18n.Localize("MenuInlineDesc", nil, nil))
 
 	results := []tg.InputBotInlineResultClass{result}
 
@@ -167,7 +167,7 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	if strings.HasPrefix(payload, "page:") {
 		parts := strings.Split(strings.TrimPrefix(payload, "page:"), ":")
 		if len(parts) < 2 {
-			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize(ctx, "MenuInvalidPage", nil, nil), false)
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize("MenuInvalidPage", nil, nil), false)
 		}
 		pageNum, _ := strconv.Atoi(parts[0])
 		chatID, _ := strconv.ParseInt(parts[1], 10, 64)
@@ -185,7 +185,7 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	if strings.HasPrefix(payload, "mod:") {
 		parts := strings.Split(strings.TrimPrefix(payload, "mod:"), ":")
 		if len(parts) < 3 {
-			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize(ctx, "MenuInvalidModule", nil, nil), false)
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize("MenuInvalidModule", nil, nil), false)
 		}
 		modID := parts[0]
 		fromPageStr := parts[1]
@@ -201,7 +201,7 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		}
 
 		if targetMod == nil {
-			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize(ctx, "MenuModuleNotFound", nil, nil), false)
+			return bot.AnswerCallbackQuery(ctx, q.QueryID, i18n.Localize("MenuModuleNotFound", nil, nil), false)
 		}
 
 		text, buttons := getModuleDetail(ctx, targetMod, fromPageStr, chatID)
@@ -284,25 +284,25 @@ func getPackageName(handler interface{}) string {
 
 func getLogicalModules(ctx context.Context) []LogicalModule {
 	prettyNames := map[string]string{
-		"admins":    i18n.Localize(ctx, "module_name_admins", nil, nil),
-		"afk":       i18n.Localize(ctx, "module_name_afk", nil, nil),
-		"antiflood": i18n.Localize(ctx, "module_name_antiflood", nil, nil),
-		"download":  i18n.Localize(ctx, "module_name_download", nil, nil),
-		"ping":      i18n.Localize(ctx, "module_name_ping", nil, nil),
-		"prefix":    i18n.Localize(ctx, "module_name_prefix", nil, nil),
-		"status":    i18n.Localize(ctx, "module_name_status", nil, nil),
-		"voicechat": i18n.Localize(ctx, "module_name_voicechat", nil, nil),
+		"admins":    i18n.Localize("module_name_admins", nil, nil),
+		"afk":       i18n.Localize("module_name_afk", nil, nil),
+		"antiflood": i18n.Localize("module_name_antiflood", nil, nil),
+		"download":  i18n.Localize("module_name_download", nil, nil),
+		"ping":      i18n.Localize("module_name_ping", nil, nil),
+		"prefix":    i18n.Localize("module_name_prefix", nil, nil),
+		"status":    i18n.Localize("module_name_status", nil, nil),
+		"voicechat": i18n.Localize("module_name_voicechat", nil, nil),
 	}
 
 	prettyDescriptions := map[string]string{
-		"admins":    i18n.Localize(ctx, "module_desc_admins", nil, nil),
-		"afk":       i18n.Localize(ctx, "module_desc_afk", nil, nil),
-		"antiflood": i18n.Localize(ctx, "module_desc_antiflood", nil, nil),
-		"download":  i18n.Localize(ctx, "module_desc_download", nil, nil),
-		"ping":      i18n.Localize(ctx, "module_desc_ping", nil, nil),
-		"prefix":    i18n.Localize(ctx, "module_desc_prefix", nil, nil),
-		"status":    i18n.Localize(ctx, "module_desc_status", nil, nil),
-		"voicechat": i18n.Localize(ctx, "module_desc_voicechat", nil, nil),
+		"admins":    i18n.Localize("module_desc_admins", nil, nil),
+		"afk":       i18n.Localize("module_desc_afk", nil, nil),
+		"antiflood": i18n.Localize("module_desc_antiflood", nil, nil),
+		"download":  i18n.Localize("module_desc_download", nil, nil),
+		"ping":      i18n.Localize("module_desc_ping", nil, nil),
+		"prefix":    i18n.Localize("module_desc_prefix", nil, nil),
+		"status":    i18n.Localize("module_desc_status", nil, nil),
+		"voicechat": i18n.Localize("module_desc_voicechat", nil, nil),
 	}
 
 	groups := make(map[string]*LogicalModule)
@@ -410,13 +410,13 @@ func getModulesPage(ctx context.Context, page int, chatID int64) (string, [][]bo
 	nextPage := page + 1
 
 	navRow := []bot.Button{
-		{Text: i18n.Localize(ctx, "MenuPrevBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%d:%d", prevPage, chatID)},
-		{Text: i18n.Localize(ctx, "MenuCloseBtn", nil, nil), CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
-		{Text: i18n.Localize(ctx, "MenuNextBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%d:%d", nextPage, chatID)},
+		{Text: i18n.Localize("MenuPrevBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%d:%d", prevPage, chatID)},
+		{Text: i18n.Localize("MenuCloseBtn", nil, nil), CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
+		{Text: i18n.Localize("MenuNextBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%d:%d", nextPage, chatID)},
 	}
 	modRows = append(modRows, navRow)
 
-	text := i18n.Localize(ctx, "MenuListText", map[string]interface{}{
+	text := i18n.Localize("MenuListText", map[string]interface{}{
 		"Page":  page + 1,
 		"Total": totalPages,
 	}, nil)
@@ -452,10 +452,10 @@ func getModuleDetail(ctx context.Context, mod *LogicalModule, fromPage string, c
 			}
 		}
 	} else {
-		cmdList = append(cmdList, i18n.Localize(ctx, "MenuNoDirectCommands", nil, nil))
+		cmdList = append(cmdList, i18n.Localize("MenuNoDirectCommands", nil, nil))
 	}
 
-	text := i18n.Localize(ctx, "MenuModuleDetail", map[string]interface{}{
+	text := i18n.Localize("MenuModuleDetail", map[string]interface{}{
 		"Name":     mod.Name,
 		"Desc":     mod.Description,
 		"Commands": strings.Join(cmdList, "\n"),
@@ -463,8 +463,8 @@ func getModuleDetail(ctx context.Context, mod *LogicalModule, fromPage string, c
 
 	buttons := [][]bot.Button{
 		{
-			{Text: i18n.Localize(ctx, "MenuBackBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%s:%d", fromPage, chatID)},
-			{Text: i18n.Localize(ctx, "MenuCloseBtn", nil, nil), CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
+			{Text: i18n.Localize("MenuBackBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%s:%d", fromPage, chatID)},
+			{Text: i18n.Localize("MenuCloseBtn", nil, nil), CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
 		},
 	}
 

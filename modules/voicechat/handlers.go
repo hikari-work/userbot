@@ -27,7 +27,7 @@ func LeaveVCHandler(ctx *ext.Context, update *ext.Update) error {
 	state.mu.Lock()
 	defer state.mu.Unlock()
 	if state.pc == nil {
-		text := i18n.Localize(ctx, "VCNotJoined", nil, nil)
+		text := i18n.Localize("VCNotJoined", nil, nil)
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
 		return nil
 	}
@@ -48,7 +48,7 @@ func LeaveVCHandler(ctx *ext.Context, update *ext.Update) error {
 		})
 	}
 
-	text := i18n.Localize(ctx, "VCLeftSuccess", nil, nil)
+	text := i18n.Localize("VCLeftSuccess", nil, nil)
 	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
 	return nil
 }
@@ -58,7 +58,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 	uMsg := update.EffectiveMessage
 
 	if uChat.IsAUser() {
-		text := i18n.Localize(ctx, "VCOnlyError", nil, nil)
+		text := i18n.Localize("VCOnlyError", nil, nil)
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
 		return nil
 	}
@@ -76,20 +76,20 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 	state.mu.Lock()
 	if state.pc != nil {
 		state.mu.Unlock()
-		text := i18n.Localize(ctx, "VCAlreadyJoined", nil, nil)
+		text := i18n.Localize("VCAlreadyJoined", nil, nil)
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
 		return nil
 	}
 	state.mu.Unlock()
 
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCJoining", nil, nil))
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCJoining", nil, nil))
 
 	var groupCall *tg.InputGroupCall
 
 	call, err := getGroupCall(ctx, uChat.GetID())
 	if err != nil || call == nil {
 
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedGetInfo", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedGetInfo", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -97,7 +97,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 
 	m := &webrtc.MediaEngine{}
 	if err := m.RegisterDefaultCodecs(); err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCMediaEngineError", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCMediaEngineError", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -107,7 +107,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 
 	i := &interceptor.Registry{}
 	if err := webrtc.RegisterDefaultInterceptors(m, i); err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCInterceptorError", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCInterceptorError", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 	i.Add(&TelegramVoIPInterceptorFactory{})
@@ -132,7 +132,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		},
 	})
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedPeerConn", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedPeerConn", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -171,7 +171,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedAudioTrack", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedAudioTrack", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -190,7 +190,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedAddTrack", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedAddTrack", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -209,7 +209,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedCreateOffer", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedCreateOffer", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 	if err := pc.SetLocalDescription(offer); err != nil {
@@ -217,7 +217,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedSetLocalDesc", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedSetLocalDesc", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -245,7 +245,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 	})
 	if err != nil {
 		_ = pc.Close()
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedJoinCall", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedJoinCall", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -272,7 +272,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCMissingConnParams", nil, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCMissingConnParams", nil, nil))
 		return nil
 	}
 
@@ -282,7 +282,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedParseParams", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedParseParams", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -297,7 +297,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCFailedSetRemoteDesc", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCFailedSetRemoteDesc", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -306,7 +306,7 @@ func JoinVCHandler(ctx *ext.Context, update *ext.Update) error {
 	state.audioTrack = audioTrack
 	state.mu.Unlock()
 
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCJoinSuccess", nil, nil))
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCJoinSuccess", nil, nil))
 	return nil
 }
 
@@ -320,12 +320,12 @@ func PauseHandler(ctx *ext.Context, update *ext.Update) error {
 	defer state.mu.Unlock()
 
 	if !state.isPlaying {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCNoAudioPlaying", nil, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCNoAudioPlaying", nil, nil))
 		return nil
 	}
 
 	state.isPaused = true
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCPaybackPaused", nil, nil))
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCPaybackPaused", nil, nil))
 	return nil
 }
 
@@ -339,12 +339,12 @@ func ResumeHandler(ctx *ext.Context, update *ext.Update) error {
 	defer state.mu.Unlock()
 
 	if !state.isPlaying {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCNoAudioPlaying", nil, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCNoAudioPlaying", nil, nil))
 		return nil
 	}
 
 	state.isPaused = false
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "VCPaybackResumed", nil, nil))
+	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("VCPaybackResumed", nil, nil))
 	return nil
 }
 
@@ -365,7 +365,7 @@ func StopHandler(ctx *ext.Context, update *ext.Update) error {
 	state.isPlaying = false
 	state.isPaused = false
 
-	text := i18n.Localize(ctx, "VCPlaybackStopped", nil, nil)
+	text := i18n.Localize("VCPlaybackStopped", nil, nil)
 	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
 	return nil
 }

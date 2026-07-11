@@ -228,7 +228,7 @@ func uploadAndSendMedia(ctx *ext.Context, chatID int64, triggerMsgID int, output
 	uploadedFile, err := uploaderHelper.FromPath(ctx, outputPath)
 	if err != nil {
 		slog.Error("status: failed to upload file", "error", err)
-		_, _ = utils.EditMessageHTML(ctx, chatID, triggerMsgID, i18n.Localize(ctx, "DownloadFailedUpload", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, chatID, triggerMsgID, i18n.Localize("DownloadFailedUpload", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 	slog.Info("status: upload file success")
@@ -310,7 +310,7 @@ func uploadAndSendMedia(ctx *ext.Context, chatID int64, triggerMsgID int, output
 		return err
 	}
 
-	htmlText := i18n.Localize(ctx, "DownloadCompleted", map[string]interface{}{
+	htmlText := i18n.Localize("DownloadCompleted", map[string]interface{}{
 		"Type": meta.MediaTypeStr,
 		"Name": meta.FileName,
 	}, nil)
@@ -334,45 +334,45 @@ func uploadAndSendMedia(ctx *ext.Context, chatID int64, triggerMsgID int, output
 func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 	args := update.Args()
 	if len(args) < 2 {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadUsage", nil, nil))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadUsage", nil, nil))
 		return fmt.Errorf("argument not found")
 	}
 
 	link := args[1]
 	slog.Info("Starting proses download link", "link", link)
 
-	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadAnalyzing", nil, nil))
+	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
 
 	peer, isPrivate, msgID, err := parseLink(link)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
 	chatID, err := resolvePeer(ctx, peer, isPrivate)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedResolveChat", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadFailedResolveChat", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
-	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadGettingData", nil, nil))
+	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadGettingData", nil, nil))
 
 	msg, err := getMessage(ctx, chatID, msgID)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
 	meta := determineFileInfo(msg)
 
-	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadDownloading", map[string]interface{}{
+	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadDownloading", map[string]interface{}{
 		"Type": meta.MediaTypeStr,
 		"Name": meta.FileName,
 	}, nil))
 
 	err = os.MkdirAll("downloads", 0755)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedMkdir", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadFailedMkdir", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
@@ -404,12 +404,12 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 	_, err = ctx.DownloadMedia(msg.Media, ext.DownloadOutputPath(outputPath), nil)
 	if err != nil {
 		slog.Error("status: Failed DownloadMedia", "error", err)
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadFailedDownloadMedia", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadFailedDownloadMedia", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 	slog.Info("status: DownloadMedia success")
 
-	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize(ctx, "DownloadUploading", map[string]interface{}{"Name": meta.FileName}, nil))
+	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadUploading", map[string]interface{}{"Name": meta.FileName}, nil))
 
 	err = uploadAndSendMedia(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, outputPath, thumbPath, meta)
 	return err

@@ -36,21 +36,21 @@ func langHandler(ctx *ext.Context, update *ext.Update) error {
 
 	if !bot.IsActive() {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			i18n.Localize(ctx, "MenuBotNotActive", nil, nil))
+			i18n.Localize("MenuBotNotActive", nil, nil))
 		return nil
 	}
 
 	botUsername := bot.Username
 	if botUsername == "" {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			i18n.Localize(ctx, "MenuBotUsernameMissing", nil, nil))
+			i18n.Localize("MenuBotUsernameMissing", nil, nil))
 		return nil
 	}
 
 	botInputPeer, err := ctx.ResolveUsername(botUsername)
 	if err != nil {
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID,
-			i18n.Localize(ctx, "MenuFailedResolveUsername", map[string]interface{}{"Error": err.Error()}, nil))
+			i18n.Localize("MenuFailedResolveUsername", map[string]interface{}{"Error": err.Error()}, nil))
 		return nil
 	}
 
@@ -135,8 +135,8 @@ func langInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 			NoWebpage:   true,
 		},
 	}
-	result.SetTitle(i18n.Localize(ctx, "LangTitle", nil, nil))
-	result.SetDescription(i18n.Localize(ctx, "LangDesc", nil, nil))
+	result.SetTitle(i18n.Localize("LangTitle", nil, nil))
+	result.SetDescription(i18n.Localize("LangDesc", nil, nil))
 
 	results := []tg.InputBotInlineResultClass{result}
 	return bot.AnswerInlineQuery(ctx, q.QueryID, results)
@@ -185,7 +185,7 @@ func langCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 			return bot.AnswerCallbackQuery(ctx, q.QueryID, fmt.Sprintf("Error setting language: %v", err), true)
 		}
 
-		successMsg := i18n.Localize(ctx, "LangSuccess", map[string]interface{}{"Language": getLangLabel(lang)}, nil)
+		successMsg := i18n.Localize("LangSuccess", map[string]interface{}{"Language": getLangLabel(lang)}, nil)
 		_ = bot.AnswerCallbackQuery(ctx, q.QueryID, successMsg, false)
 
 		text, buttons := getLangPanel(ctx, chatID)
@@ -202,8 +202,8 @@ func langCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 }
 
 func getLangPanel(ctx context.Context, chatID int64) (string, [][]bot.Button) {
-	currentLang := i18n.GetLanguage(ctx)
-	text := i18n.Localize(ctx, "LangSelect", map[string]interface{}{"Current": currentLang}, nil)
+	currentLang := i18n.GetLanguage()
+	text := i18n.Localize("LangSelect", map[string]interface{}{"Current": currentLang}, nil)
 
 	availLanguages := i18n.GetAllAvailLanguage()
 
@@ -229,7 +229,7 @@ func getLangPanel(ctx context.Context, chatID int64) (string, [][]bot.Button) {
 		buttons = append(buttons, row)
 	}
 
-	closeBtnText := i18n.Localize(ctx, "MenuCloseBtn", nil, nil)
+	closeBtnText := i18n.Localize("MenuCloseBtn", nil, nil)
 	buttons = append(buttons, []bot.Button{
 		{
 			Text:         closeBtnText,

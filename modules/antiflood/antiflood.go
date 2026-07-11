@@ -40,7 +40,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	args := update.Args()
 
 	if uChat.IsAUser() {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorNotGroup", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodErrorNotGroup", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -51,7 +51,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 
 	hasPermission, err := canRestrictMembers(ctx, uChat.GetID())
 	if err != nil {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorCheckPermission", map[string]interface{}{"Error": err.Error()}, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodErrorCheckPermission", map[string]interface{}{"Error": err.Error()}, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -60,7 +60,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 	if !hasPermission {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorNoPermission", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodErrorNoPermission", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -73,7 +73,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		ctxBg := ctx
 		err := dbClient.Redis.Del(ctxBg, fmt.Sprintf("userbot:flood:cfg:%d", uChat.GetID())).Err()
 		if err != nil {
-			text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorDisable", map[string]interface{}{"Error": err.Error()}, nil))
+			text, entities := utils.ParseHTML(i18n.Localize("FloodErrorDisable", map[string]interface{}{"Error": err.Error()}, nil))
 			_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 				ID:       uMsg.ID,
 				Message:  text,
@@ -82,7 +82,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 			return err
 		}
 
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodDisabled", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodDisabled", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -92,7 +92,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if len(args) < 3 {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodUsage", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodUsage", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -103,7 +103,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 
 	ttlVal, err := strconv.Atoi(args[0])
 	if err != nil || ttlVal <= 0 {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorTTL", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodErrorTTL", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -114,7 +114,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 
 	maxVal, err := strconv.Atoi(args[1])
 	if err != nil || maxVal <= 0 || maxVal > 255 {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorMax", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodErrorMax", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -125,7 +125,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 
 	action := strings.ToLower(args[2])
 	if action != "ban" && action != "kick" && action != "mute" {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorAction", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodErrorAction", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -143,7 +143,7 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	}).Err()
 
 	if err != nil {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodFailedConfig", map[string]interface{}{"Error": err.Error()}, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodFailedConfig", map[string]interface{}{"Error": err.Error()}, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -152,8 +152,8 @@ func setFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 
-	actionLoc := i18n.Localize(ctx, "action_"+action, nil, nil)
-	successMsg := i18n.Localize(ctx, "FloodSuccessConfig", map[string]interface{}{
+	actionLoc := i18n.Localize("action_"+action, nil, nil)
+	successMsg := i18n.Localize("FloodSuccessConfig", map[string]interface{}{
 		"Max":    maxVal,
 		"TTL":    ttlVal,
 		"Action": actionLoc,
@@ -172,7 +172,7 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	uChat := update.EffectiveChat()
 
 	if uChat.IsAUser() {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodErrorPrivate", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodErrorPrivate", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -186,7 +186,7 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	cfg, err := dbClient.Redis.HGetAll(ctxBg, cfgKey).Result()
 
 	if err != nil {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodFailedRetrieve", map[string]interface{}{"Error": err.Error()}, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodFailedRetrieve", map[string]interface{}{"Error": err.Error()}, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -196,7 +196,7 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if len(cfg) == 0 {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "FloodNotConfigured", nil, nil))
+		text, entities := utils.ParseHTML(i18n.Localize("FloodNotConfigured", nil, nil))
 		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       uMsg.ID,
 			Message:  text,
@@ -205,8 +205,8 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	actionLoc := i18n.Localize(ctx, "action_"+cfg["action"], nil, nil)
-	infoMsg := i18n.Localize(ctx, "FloodConfigInfo", map[string]interface{}{
+	actionLoc := i18n.Localize("action_"+cfg["action"], nil, nil)
+	infoMsg := i18n.Localize("FloodConfigInfo", map[string]interface{}{
 		"Max":    cfg["max"],
 		"TTL":    cfg["ttl"],
 		"Action": actionLoc,
@@ -288,8 +288,8 @@ func floodMessageHook(ctx *ext.Context, update *ext.Update) error {
 			return nil
 		}
 
-		actionResultLoc := i18n.Localize(ctx, "result_"+action, nil, nil)
-		warnMsg := i18n.Localize(ctx, "FloodTriggered", map[string]interface{}{
+		actionResultLoc := i18n.Localize("result_"+action, nil, nil)
+		warnMsg := i18n.Localize("FloodTriggered", map[string]interface{}{
 			"UserId": userID,
 			"Result": actionResultLoc,
 		}, nil)

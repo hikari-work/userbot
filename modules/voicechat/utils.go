@@ -3,17 +3,32 @@ package voicechat
 import "strings"
 
 func extractYouTubeURL(text string) string {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return ""
+	}
+
+	// 1. Check if there is any HTTP/HTTPS URL in the text
 	words := strings.Fields(text)
 	for _, w := range words {
-		if strings.Contains(w, "youtube.com/") || strings.Contains(w, "youtu.be/") {
-			w = strings.Trim(w, "()[]{}<>\"'")
-			return w
+		wTrimmed := strings.Trim(w, "()[]{}<>\"'")
+		if strings.HasPrefix(wTrimmed, "http://") || strings.HasPrefix(wTrimmed, "https://") {
+			return wTrimmed
 		}
 	}
+
+	// 2. Check if it's a YouTube video ID (11 characters, no spaces)
 	if len(text) == 11 && !strings.Contains(text, " ") {
 		return text
 	}
-	return ""
+
+	// 3. Check if it already has a search prefix
+	if strings.HasPrefix(text, "ytsearch:") || (strings.HasPrefix(text, "ytsearch") && strings.Contains(text, ":")) {
+		return text
+	}
+
+	// 4. Otherwise, treat the whole text as a YouTube search query
+	return "ytsearch1:" + text
 }
 
 func opusPacketSamples(pkt []byte) uint64 {

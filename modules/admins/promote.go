@@ -28,7 +28,7 @@ func promoteHandler(ctx *ext.Context, update *ext.Update) error {
 	args := update.Args()
 	title := getAdminTitle(args, update.EffectiveMessage.ReplyTo != nil)
 
-	text, entities := utils.ParseHTML(i18n.Localize(ctx, "PromoteLoading", nil, nil))
+	text, entities := utils.ParseHTML(i18n.Localize("PromoteLoading", nil, nil))
 	_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       update.EffectiveMessage.ID,
 		Message:  text,
@@ -62,7 +62,7 @@ func promoteHandler(ctx *ext.Context, update *ext.Update) error {
 
 	_, err := ctx.PromoteChatMember(chat.GetID(), target, opts)
 	if err != nil {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "PromoteFailed", map[string]interface{}{
+		text, entities := utils.ParseHTML(i18n.Localize("PromoteFailed", map[string]interface{}{
 			"Error": err.Error(),
 		}, nil))
 		_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
@@ -75,12 +75,12 @@ func promoteHandler(ctx *ext.Context, update *ext.Update) error {
 
 	var successMsg string
 	if title != "" {
-		successMsg = i18n.Localize(ctx, "PromoteSuccessTitle", map[string]interface{}{
+		successMsg = i18n.Localize("PromoteSuccessTitle", map[string]interface{}{
 			"UserId": target,
 			"Title":  title,
 		}, nil)
 	} else {
-		successMsg = i18n.Localize(ctx, "PromoteSuccess", map[string]interface{}{
+		successMsg = i18n.Localize("PromoteSuccess", map[string]interface{}{
 			"UserId": target,
 		}, nil)
 	}

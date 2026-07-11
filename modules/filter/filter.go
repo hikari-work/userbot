@@ -38,14 +38,14 @@ func filterCommandHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if uChat.IsAUser() {
-		localize := i18n.Localize(ctx, "FilterInPrivate", nil, nil)
+		localize := i18n.Localize("FilterInPrivate", nil, nil)
 		_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 		return err
 	}
 
 	args := update.Args()
 	if len(args) == 0 {
-		_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "FilterUsage", nil, nil))
+		_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("FilterUsage", nil, nil))
 		return err
 	}
 
@@ -60,7 +60,7 @@ func filterCommandHandler(ctx *ext.Context, update *ext.Update) error {
 	switch cmdName {
 	case "filter":
 		if len(args) < 2 {
-			_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "FilterUsage", nil, nil))
+			_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("FilterUsage", nil, nil))
 			return err
 		}
 		trigger := strings.ToLower(args[1])
@@ -69,14 +69,14 @@ func filterCommandHandler(ctx *ext.Context, update *ext.Update) error {
 		if len(args) <= 2 {
 			replyHeader, ok := uMsg.ReplyTo.(*tg.MessageReplyHeader)
 			if !ok || replyHeader.ReplyToMsgID == 0 {
-				_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "FilterUsage", nil, nil))
+				_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("FilterUsage", nil, nil))
 				return err
 			}
 			msgs, err := ctx.GetMessages(uChat.GetID(), []tg.InputMessageClass{&tg.InputMessageID{
 				ID: replyHeader.ReplyToMsgID,
 			}})
 			if err != nil || len(msgs) == 0 {
-				_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "FilterUsage", nil, nil))
+				_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("FilterUsage", nil, nil))
 				return err
 			}
 			repMsg, ok := msgs[0].(*tg.Message)
@@ -91,50 +91,50 @@ func filterCommandHandler(ctx *ext.Context, update *ext.Update) error {
 
 		err := setFilter(ctx, uChat.GetID(), trigger, response)
 		if err != nil {
-			localize := i18n.Localize(ctx, "FilterFailedSave", map[string]interface{}{"Error": err.Error()}, nil)
+			localize := i18n.Localize("FilterFailedSave", map[string]interface{}{"Error": err.Error()}, nil)
 			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return err
 		}
 
-		localize := i18n.Localize(ctx, "FilterSuccess", map[string]interface{}{"Trigger": trigger}, nil)
+		localize := i18n.Localize("FilterSuccess", map[string]interface{}{"Trigger": trigger}, nil)
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 		return nil
 
 	case "stop":
 		if len(args) < 2 {
-			_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "FilterStopUsage", nil, nil))
+			_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("FilterStopUsage", nil, nil))
 			return err
 		}
 		trigger := strings.ToLower(args[1])
 		deleted, err := deleteFilter(ctx, uChat.GetID(), trigger)
 		if err != nil {
-			localize := i18n.Localize(ctx, "FilterStopFailed", map[string]interface{}{"Error": err.Error()}, nil)
+			localize := i18n.Localize("FilterStopFailed", map[string]interface{}{"Error": err.Error()}, nil)
 			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return err
 		}
 		if deleted == 0 {
-			localize := i18n.Localize(ctx, "FilterStopNotFound", map[string]interface{}{"Trigger": trigger}, nil)
+			localize := i18n.Localize("FilterStopNotFound", map[string]interface{}{"Trigger": trigger}, nil)
 			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return nil
 		}
-		localize := i18n.Localize(ctx, "FilterStopSuccess", map[string]interface{}{"Trigger": trigger}, nil)
+		localize := i18n.Localize("FilterStopSuccess", map[string]interface{}{"Trigger": trigger}, nil)
 		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 		return nil
 
 	case "filters":
 		filters, err := getFilters(ctx, uChat.GetID())
 		if err != nil {
-			localize := i18n.Localize(ctx, "FiltersFailedRetrieve", map[string]interface{}{"Error": err.Error()}, nil)
+			localize := i18n.Localize("FiltersFailedRetrieve", map[string]interface{}{"Error": err.Error()}, nil)
 			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return err
 		}
 		if len(filters) == 0 {
-			localize := i18n.Localize(ctx, "FiltersEmpty", nil, nil)
+			localize := i18n.Localize("FiltersEmpty", nil, nil)
 			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, localize)
 			return nil
 		}
 		var sb strings.Builder
-		sb.WriteString(i18n.Localize(ctx, "FiltersListHeader", nil, nil))
+		sb.WriteString(i18n.Localize("FiltersListHeader", nil, nil))
 		i := 1
 		for trig := range filters {
 			sb.WriteString(fmt.Sprintf("%d. <code>%s</code>\n", i, html.EscapeString(trig)))

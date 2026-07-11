@@ -40,7 +40,7 @@ func banHandler(ctx *ext.Context, update *ext.Update) error {
 	if !ok {
 		return nil
 	}
-	loadingStr := i18n.Localize(ctx, "BANLoading", nil, nil)
+	loadingStr := i18n.Localize("BANLoading", nil, nil)
 
 	text, entities := utils.ParseHTML(loadingStr)
 	_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
@@ -51,7 +51,7 @@ func banHandler(ctx *ext.Context, update *ext.Update) error {
 
 	_, err := ctx.BanChatMember(chat.GetID(), target, 0)
 	if err != nil {
-		failedStr := i18n.Localize(ctx, "BANFailed", map[string]interface{}{
+		failedStr := i18n.Localize("BANFailed", map[string]interface{}{
 			"Error": err.Error(),
 		}, nil)
 		text, entities := utils.ParseHTML(failedStr)
@@ -62,7 +62,7 @@ func banHandler(ctx *ext.Context, update *ext.Update) error {
 		})
 		return err
 	}
-	local := i18n.Localize(ctx, "BANSuccess", map[string]interface{}{
+	local := i18n.Localize("BANSuccess", map[string]interface{}{
 		"UserId": target,
 	}, nil)
 
@@ -82,7 +82,7 @@ func unbanHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	loadingStr := i18n.Localize(ctx, "UNBANLoading", nil, nil)
+	loadingStr := i18n.Localize("UNBANLoading", nil, nil)
 	text, entities := utils.ParseHTML(loadingStr)
 	_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       update.EffectiveMessage.ID,
@@ -92,7 +92,7 @@ func unbanHandler(ctx *ext.Context, update *ext.Update) error {
 
 	_, err := ctx.UnbanChatMember(chat.GetID(), target)
 	if err != nil {
-		failedStr := i18n.Localize(ctx, "UNBANFailed", map[string]interface{}{
+		failedStr := i18n.Localize("UNBANFailed", map[string]interface{}{
 			"Error": err.Error(),
 		}, nil)
 		text, entities := utils.ParseHTML(failedStr)
@@ -104,7 +104,7 @@ func unbanHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 
-	successStr := i18n.Localize(ctx, "UNBANSuccess", map[string]interface{}{
+	successStr := i18n.Localize("UNBANSuccess", map[string]interface{}{
 		"UserId": target,
 	}, nil)
 	text, entities = utils.ParseHTML(successStr)
@@ -123,7 +123,7 @@ func kickHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	loadingStr := i18n.Localize(ctx, "KICKLoading", nil, nil)
+	loadingStr := i18n.Localize("KICKLoading", nil, nil)
 	text, entities := utils.ParseHTML(loadingStr)
 	_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       update.EffectiveMessage.ID,
@@ -133,7 +133,7 @@ func kickHandler(ctx *ext.Context, update *ext.Update) error {
 
 	_, err := ctx.BanChatMember(chat.GetID(), target, 0)
 	if err != nil {
-		failedStr := i18n.Localize(ctx, "KICKFailed", map[string]interface{}{
+		failedStr := i18n.Localize("KICKFailed", map[string]interface{}{
 			"Error": err.Error(),
 		}, nil)
 		text, entities := utils.ParseHTML(failedStr)
@@ -147,7 +147,7 @@ func kickHandler(ctx *ext.Context, update *ext.Update) error {
 
 	_, _ = ctx.UnbanChatMember(chat.GetID(), target)
 
-	successStr := i18n.Localize(ctx, "KICKSuccess", map[string]interface{}{
+	successStr := i18n.Localize("KICKSuccess", map[string]interface{}{
 		"UserId": target,
 	}, nil)
 	text, entities = utils.ParseHTML(successStr)

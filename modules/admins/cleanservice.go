@@ -28,7 +28,7 @@ func cleanServiceHandler(ctx *ext.Context, update *ext.Update) error {
 	uMsg := update.EffectiveMessage
 
 	if uChat.IsAUser() {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "CSOnlyGroupError", nil, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("CSOnlyGroupError", nil, nil))
 		return nil
 	}
 
@@ -48,7 +48,7 @@ func cleanServiceHandler(ctx *ext.Context, update *ext.Update) error {
 			err = dbClient.Redis.Del(ctxBg, key).Err()
 			status = false
 		} else {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "CSUsage", nil, nil))
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("CSUsage", nil, nil))
 			return nil
 		}
 	} else {
@@ -65,7 +65,7 @@ func cleanServiceHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "CSErrorUpdate", map[string]interface{}{"Error": err.Error()}, nil))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("CSErrorUpdate", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
 
@@ -75,8 +75,8 @@ func cleanServiceHandler(ctx *ext.Context, update *ext.Update) error {
 	} else {
 		statusKey = "CSDisabled"
 	}
-	statusStr := i18n.Localize(ctx, statusKey, nil, nil)
-	msgStr := i18n.Localize(ctx, "CSStatusChange", map[string]interface{}{"Status": statusStr}, nil)
+	statusStr := i18n.Localize(statusKey, nil, nil)
+	msgStr := i18n.Localize("CSStatusChange", map[string]interface{}{"Status": statusStr}, nil)
 	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, msgStr)
 	return nil
 }

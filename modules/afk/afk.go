@@ -27,7 +27,7 @@ func afkCommandHandler(ctx *ext.Context, update *ext.Update) error {
 	uMsg := update.EffectiveMessage
 	afkReason := strings.Join(update.Args(), " ")
 	if afkReason == "" {
-		afkReason = i18n.Localize(ctx, "AFKDefaultReason", nil, nil)
+		afkReason = i18n.Localize("AFKDefaultReason", nil, nil)
 	}
 	afkTimeStr := time.Now().Format(time.RFC3339)
 
@@ -40,14 +40,14 @@ func afkCommandHandler(ctx *ext.Context, update *ext.Update) error {
 	if err != nil {
 
 		_, err := ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			Message: i18n.Localize(ctx, "AFKFailed", map[string]interface{}{"Error": err.Error()}, nil),
+			Message: i18n.Localize("AFKFailed", map[string]interface{}{"Error": err.Error()}, nil),
 			ID:      uMsg.ID,
 		})
 		return err
 	}
 
 	_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-		Message: i18n.Localize(ctx, "AFKSuccess", nil, nil),
+		Message: i18n.Localize("AFKSuccess", nil, nil),
 		ID:      uMsg.ID,
 	})
 	return err
@@ -77,7 +77,7 @@ func afkMessageHook(ctx *ext.Context, update *ext.Update) error {
 			durationStr = "a moment"
 		}
 
-		_, _ = ctx.Reply(update, ext.ReplyTextString(i18n.Localize(ctx, "AFKBack", map[string]interface{}{"Duration": durationStr}, nil)), nil)
+		_, _ = ctx.Reply(update, ext.ReplyTextString(i18n.Localize("AFKBack", map[string]interface{}{"Duration": durationStr}, nil)), nil)
 		return nil
 	}
 
@@ -92,7 +92,7 @@ func afkMessageHook(ctx *ext.Context, update *ext.Update) error {
 			timeStr = "a moment ago"
 		}
 
-		_, _ = ctx.Reply(update, ext.ReplyTextString(i18n.Localize(ctx, "AFKStatus", map[string]interface{}{"Reason": afkData["reason"], "Time": timeStr}, nil)), nil)
+		_, _ = ctx.Reply(update, ext.ReplyTextString(i18n.Localize("AFKStatus", map[string]interface{}{"Reason": afkData["reason"], "Time": timeStr}, nil)), nil)
 	}
 
 	return nil

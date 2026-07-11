@@ -15,7 +15,7 @@ func getTargetUser(ctx *ext.Context, update *ext.Update, actionName string) (int
 	msg := update.EffectiveMessage
 
 	if chat.IsAUser() {
-		html, classes := utils.ParseHTML(i18n.Localize(ctx, "OnlyGroupError", nil, nil))
+		html, classes := utils.ParseHTML(i18n.Localize("OnlyGroupError", nil, nil))
 		_, err := ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 			ID:       msg.ID,
 			Message:  html,
@@ -29,8 +29,8 @@ func getTargetUser(ctx *ext.Context, update *ext.Update, actionName string) (int
 
 	target, err := utils.ExtractUser(ctx, msg, chat)
 	if err != nil {
-		actionLoc := i18n.Localize(ctx, "action_"+actionName, nil, nil)
-		html, classes := utils.ParseHTML(i18n.Localize(ctx, "FailedGetTargetUser", map[string]interface{}{
+		actionLoc := i18n.Localize("action_"+actionName, nil, nil)
+		html, classes := utils.ParseHTML(i18n.Localize("FailedGetTargetUser", map[string]interface{}{
 			"Action": actionLoc,
 			"Error":  err.Error(),
 		}, nil))

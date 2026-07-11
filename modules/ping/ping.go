@@ -20,7 +20,7 @@ func init() {
 func pingHandler(ctx *ext.Context, update *ext.Update) error {
 	now := time.Now()
 	since := time.Since(now)
-	text := i18n.Localize(ctx, "PongMessage", map[string]interface{}{
+	text := i18n.Localize("PongMessage", map[string]interface{}{
 		"Since": since.String(),
 	}, nil)
 	_, err := ctx.Reply(update, ext.ReplyTextString(text), nil)

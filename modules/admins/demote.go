@@ -25,7 +25,7 @@ func demoteHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	text, entities := utils.ParseHTML(i18n.Localize(ctx, "DemoteLoading", nil, nil))
+	text, entities := utils.ParseHTML(i18n.Localize("DemoteLoading", nil, nil))
 	_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
 		ID:       update.EffectiveMessage.ID,
 		Message:  text,
@@ -41,7 +41,7 @@ func demoteHandler(ctx *ext.Context, update *ext.Update) error {
 
 	_, err := ctx.DemoteChatMember(chat.GetID(), target, opts)
 	if err != nil {
-		text, entities := utils.ParseHTML(i18n.Localize(ctx, "DemoteFailed", map[string]interface{}{
+		text, entities := utils.ParseHTML(i18n.Localize("DemoteFailed", map[string]interface{}{
 			"Error": err.Error(),
 		}, nil))
 		_, _ = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{
@@ -52,7 +52,7 @@ func demoteHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 
-	text, entities = utils.ParseHTML(i18n.Localize(ctx, "DemoteSuccess", map[string]interface{}{
+	text, entities = utils.ParseHTML(i18n.Localize("DemoteSuccess", map[string]interface{}{
 		"UserId": target,
 	}, nil))
 	_, err = ctx.EditMessage(chat.GetID(), &tg.MessagesEditMessageRequest{

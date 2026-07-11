@@ -30,13 +30,13 @@ func handlerPrefix(ctx *ext.Context, update *ext.Update) error {
 
 	args := update.Args()
 	if len(args) < 2 {
-		_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "PrefixUsage", nil, nil))
+		_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PrefixUsage", nil, nil))
 		return err
 	}
 
 	newPrefix := strings.TrimSpace(args[1])
 	if len(newPrefix) != 1 {
-		_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "PrefixLengthError", nil, nil))
+		_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PrefixLengthError", nil, nil))
 		return err
 	}
 
@@ -44,7 +44,7 @@ func handlerPrefix(ctx *ext.Context, update *ext.Update) error {
 	err := dbClient.Redis.Set(ctxBg, "prefix", newPrefix, 0).Err()
 	if err != nil {
 		slog.Error("Gagal mengubah prefix di Redis", "error", err)
-		_, editErr := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "PrefixFailedRedis", map[string]interface{}{"Error": err.Error()}, nil))
+		_, editErr := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PrefixFailedRedis", map[string]interface{}{"Error": err.Error()}, nil))
 		return editErr
 	}
 
@@ -53,6 +53,6 @@ func handlerPrefix(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	slog.Info("Prefix berhasil diubah di Redis", "new_prefix", newPrefix)
-	_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize(ctx, "PrefixSuccess", map[string]interface{}{"Prefix": newPrefix}, nil))
+	_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PrefixSuccess", map[string]interface{}{"Prefix": newPrefix}, nil))
 	return err
 }

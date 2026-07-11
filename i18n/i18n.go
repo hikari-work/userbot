@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -33,13 +34,13 @@ func init() {
 	}
 }
 
-func GetLanguage(ctx context.Context) string {
+func GetLanguage() string {
 	if dbClient.Redis == nil {
 		return "id"
 	}
 	lang, err := dbClient.Redis.Get(context.Background(), "language").Result()
 	if err != nil {
-		if err != redis.Nil {
+		if !errors.Is(err, redis.Nil) {
 			slog.Error("i18n: failed to get language from Redis", "error", err)
 		}
 		return "id"
@@ -54,7 +55,7 @@ func SetLanguage(ctx context.Context, lang string) error {
 	if dbClient.Redis == nil {
 		return fmt.Errorf("redis client is not initialized")
 	}
-	return dbClient.Redis.Set(context.Background(), "language", lang, 0).Err()
+	return dbClient.Redis.Set(ctx, "language", lang, 0).Err()
 }
 func GetAllAvailLanguage() []string {
 	var langString []string
@@ -64,8 +65,8 @@ func GetAllAvailLanguage() []string {
 	return langString
 }
 
-func Localize(ctx context.Context, messageID string, templateData map[string]interface{}, pluralCount interface{}) string {
-	lang := GetLanguage(ctx)
+func Localize(messageID string, templateData map[string]interface{}, pluralCount interface{}) string {
+	lang := GetLanguage()
 	localizer := i18n.NewLocalizer(bundle, lang)
 
 	config := &i18n.LocalizeConfig{

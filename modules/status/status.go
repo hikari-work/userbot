@@ -196,7 +196,7 @@ func statusHandler(ctx *ext.Context, update *ext.Update) error {
 	ramStr := "N/A"
 	if err == nil {
 		ramPerc := (float64(memUsed) / float64(memTotal)) * 100.0
-		ramStr = i18n.Localize(ctx, "StatusRAMDetail", map[string]interface{}{
+		ramStr = i18n.Localize("StatusRAMDetail", map[string]interface{}{
 			"Total": formatBytes(memTotal),
 			"Used":  formatBytes(memUsed),
 			"Perc":  fmt.Sprintf("%.1f", ramPerc),
@@ -223,7 +223,7 @@ func statusHandler(ctx *ext.Context, update *ext.Update) error {
 	goHeapIdle := formatBytes(m.HeapIdle)
 	gcCycles := m.NumGC
 
-	htmlContent := i18n.Localize(ctx, "StatusMessage", map[string]interface{}{
+	htmlContent := i18n.Localize("StatusMessage", map[string]interface{}{
 		"CPU":         fmt.Sprintf("%.2f", cpuUsage),
 		"RAM":         ramStr,
 		"Goroutines":  goroutines,
