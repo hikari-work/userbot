@@ -514,6 +514,12 @@
   },
   "FiltersFailedRetrieve": {
     "other": "❌ <b>Failed to retrieve filters:</b> {{.Error}}"
+  },
+  "MediaAutoDLActv" : {
+    "other" : "✅ <b>Auto-download view once media turned off!</b>"
+  },
+  "MediaAutoDLDeact" : {
+    "other" : "✅ <b>Auto-download view once media turned on!</b>"
   }
 }
 

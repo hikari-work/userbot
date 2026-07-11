@@ -7,6 +7,7 @@ import (
 	_ "github.com/hikari-work/userbot/modules/antiflood"
 	_ "github.com/hikari-work/userbot/modules/download"
 	_ "github.com/hikari-work/userbot/modules/filter"
+	_ "github.com/hikari-work/userbot/modules/json"
 	_ "github.com/hikari-work/userbot/modules/lang"
 	_ "github.com/hikari-work/userbot/modules/menu"
 	_ "github.com/hikari-work/userbot/modules/ping"

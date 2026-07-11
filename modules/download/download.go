@@ -3,6 +3,7 @@ package download
 import (
 	"crypto/rand"
 	"fmt"
+	"html"
 	"log/slog"
 	"math/big"
 	"mime"
@@ -16,6 +17,7 @@ import (
 	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
+	dbClient "github.com/hikari-work/userbot/connection"
 	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
@@ -39,6 +41,7 @@ func init() {
 		Commands:    []string{"download", "dl"},
 		OnlyOut:     true,
 		Handler:     downloadHandler,
+		OnMessage:   autoForward,
 	})
 }
 
@@ -300,8 +303,10 @@ func uploadAndSendMedia(ctx *ext.Context, chatID int64, triggerMsgID int, output
 		reqMedia = reqMediaDoc
 	}
 
-	slog.Info("status: deleting trigger...")
-	_ = ctx.DeleteMessages(chatID, []int{triggerMsgID})
+	if triggerMsgID > 0 {
+		slog.Info("status: deleting trigger...")
+		_ = ctx.DeleteMessages(chatID, []int{triggerMsgID})
+	}
 
 	slog.Info("status: running SendMedia...")
 	peer, err := ctx.ResolveInputPeerById(chatID)
@@ -340,6 +345,26 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 
 	link := args[1]
 	slog.Info("Starting proses download link", "link", link)
+	if "on" == strings.ToLower(link) {
+		err := dbClient.Redis.Set(ctx, "userbot:autodownload:ttl", "1", 0).Err()
+		if err != nil {
+			_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("❌ <b>Error:</b> %s", html.EscapeString(err.Error())))
+			return err
+		}
+		localize := i18n.Localize("MediaAutoDLDeact", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, localize)
+		return nil
+	}
+	if "off" == strings.ToLower(link) {
+		err := dbClient.Redis.Del(ctx, "userbot:autodownload:ttl").Err()
+		if err != nil {
+			_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("❌ <b>Error:</b> %s", html.EscapeString(err.Error())))
+			return err
+		}
+		localize := i18n.Localize("MediaAutoDLActv", nil, nil)
+		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, localize)
+		return nil
+	}
 
 	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
 
@@ -370,47 +395,112 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 		"Name": meta.FileName,
 	}, nil))
 
-	err = os.MkdirAll("downloads", 0755)
+	outputPath, thumbPath, cleanup, err := downloadMediaHelper(ctx, msg.Media, meta)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadFailedMkdir", map[string]interface{}{"Error": err.Error()}, nil))
-		return err
-	}
-
-	outputPath := filepath.Join("downloads", meta.FileName)
-	defer func() {
-		slog.Info("status: Deleting local file...", "path", outputPath)
-		_ = os.Remove(outputPath)
-	}()
-
-	var thumbPath string
-	if meta.HasThumb && meta.Document != nil {
-		thumbPath = filepath.Join("downloads", fmt.Sprintf("thumb_%d.jpg", meta.Document.ID))
-		defer func() {
-			slog.Info("status: deleting local thumbnail...", "path", thumbPath)
-			_ = os.Remove(thumbPath)
-		}()
-
-		slog.Info("status: starting download thumbnail...", "thumbSize", meta.ThumbSize, "thumbPath", thumbPath)
-		err = downloadThumbnail(ctx, meta.Document, meta.ThumbSize, thumbPath)
-		if err != nil {
-			slog.Error("status: failed to download thumbnail", "error", err)
-			thumbPath = ""
-		} else {
-			slog.Info("status: Download thumbnail success")
-		}
-	}
-
-	slog.Info("status: Starting DownloadMedia...", "outputPath", outputPath)
-	_, err = ctx.DownloadMedia(msg.Media, ext.DownloadOutputPath(outputPath), nil)
-	if err != nil {
-		slog.Error("status: Failed DownloadMedia", "error", err)
 		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadFailedDownloadMedia", map[string]interface{}{"Error": err.Error()}, nil))
 		return err
 	}
-	slog.Info("status: DownloadMedia success")
+	defer cleanup()
 
 	_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadUploading", map[string]interface{}{"Name": meta.FileName}, nil))
 
 	err = uploadAndSendMedia(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, outputPath, thumbPath, meta)
 	return err
+}
+
+func autoForward(ctx *ext.Context, update *ext.Update) error {
+	msg := update.EffectiveMessage
+	if msg == nil || msg.Media == nil {
+		return nil
+	}
+
+	enabled, err := dbClient.Redis.Exists(ctx, "userbot:autodownload:ttl").Result()
+	if err != nil || enabled == 0 {
+		return nil
+	}
+
+	if !isViewOnce(msg.Media) {
+		return nil
+	}
+
+	slog.Info("Deteksi media sekali lihat (TTLSeconds > 0) dan autodownload aktif. Memulai pengunduhan...")
+
+	meta := determineFileInfo(msg.Message)
+
+	outputPath, thumbPath, cleanup, err := downloadMediaHelper(ctx, msg.Media, meta)
+	if err != nil {
+		slog.Error("status: Failed to download media", "error", err)
+		return err
+	}
+	defer cleanup()
+
+	err = uploadAndSendMedia(ctx, ctx.Self.ID, 0, outputPath, thumbPath, meta)
+	if err != nil {
+		slog.Error("status: Failed to upload and send auto-downloaded media", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func downloadMediaHelper(ctx *ext.Context, media tg.MessageMediaClass, meta MediaMetadata) (outputPath string, thumbPath string, cleanup func(), err error) {
+	err = os.MkdirAll("downloads", 0755)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	outputPath = filepath.Join("downloads", meta.FileName)
+	cleanups := []func(){
+		func() {
+			slog.Info("status: Deleting local file...", "path", outputPath)
+			_ = os.Remove(outputPath)
+		},
+	}
+
+	if meta.HasThumb && meta.Document != nil {
+		tPath := filepath.Join("downloads", fmt.Sprintf("thumb_%d.jpg", meta.Document.ID))
+		slog.Info("status: starting download thumbnail...", "thumbSize", meta.ThumbSize, "thumbPath", tPath)
+		tErr := downloadThumbnail(ctx, meta.Document, meta.ThumbSize, tPath)
+		if tErr != nil {
+			slog.Error("status: failed to download thumbnail", "error", tErr)
+		} else {
+			thumbPath = tPath
+			cleanups = append(cleanups, func() {
+				slog.Info("status: deleting local thumbnail...", "path", tPath)
+				_ = os.Remove(tPath)
+			})
+		}
+	}
+
+	slog.Info("status: Starting DownloadMedia...", "outputPath", outputPath)
+	_, err = ctx.DownloadMedia(media, ext.DownloadOutputPath(outputPath), nil)
+	if err != nil {
+		slog.Error("status: Failed DownloadMedia", "error", err)
+		for _, clean := range cleanups {
+			clean()
+		}
+		return "", "", nil, err
+	}
+	slog.Info("status: DownloadMedia success")
+
+	cleanup = func() {
+		for _, clean := range cleanups {
+			clean()
+		}
+	}
+
+	return outputPath, thumbPath, cleanup, nil
+}
+
+func isViewOnce(media tg.MessageMediaClass) bool {
+	if media == nil {
+		return false
+	}
+	switch m := media.(type) {
+	case *tg.MessageMediaPhoto:
+		return int64(m.TTLSeconds) > 0
+	case *tg.MessageMediaDocument:
+		return int64(m.TTLSeconds) > 0
+	}
+	return false
 }

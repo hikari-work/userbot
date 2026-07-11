@@ -514,6 +514,12 @@
   },
   "FiltersFailedRetrieve": {
     "other": "❌ <b>Gagal mengambil daftar filter:</b> {{.Error}}"
+  },
+  "MediaAutoDLActv" : {
+    "other" : "✅ <b>Auto-download media sekali lihat diaktifkan!</b>"
+  },
+  "MediaAutoDLDeact" : {
+    "other" : "✅ <b>Auto-download media sekali lihat di nonaktifkan!</b>"
   }
 }
 
