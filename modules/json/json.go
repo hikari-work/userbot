@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"log/slog"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -246,7 +245,7 @@ func uploadToPasteRS(content string) (string, error) {
 	defer func() {
 		err2 := resp.Body.Close()
 		if err2 != nil {
-			slog.Error("error to close", err2.Error())
+
 		}
 	}()
 
