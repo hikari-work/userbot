@@ -9,12 +9,15 @@ import (
 )
 
 type Config struct {
-	ApiId       int
-	ApiHash     string
-	PhoneNumber string
-	BotToken    string
-	RedisUri    string
-	RedisPass   string
+	ApiId           int
+	ApiHash         string
+	PhoneNumber     string
+	BotToken        string
+	RedisUri        string
+	RedisPass       string
+	TelethonSession string
+	PyrogramSession string
+	GramjsSession   string
 }
 
 func NewConfig() *Config {
@@ -33,12 +36,18 @@ func NewConfig() *Config {
 	redisPass := os.Getenv("REDIS_PASS")
 	phoneNumber := os.Getenv("PHONE_NUMBER")
 	botToken := os.Getenv("BOT_TOKEN")
+	telethonSession := os.Getenv("TELETHON_SESSION")
+	pyrogramSession := os.Getenv("PYROGRAM_SESSION")
+	gramjsSession := os.Getenv("GRAMJS_SESSION")
 	return &Config{
-		ApiId:       apiId,
-		ApiHash:     apiHash,
-		PhoneNumber: phoneNumber,
-		BotToken:    botToken,
-		RedisUri:    redisUri,
-		RedisPass:   redisPass,
+		ApiId:           apiId,
+		ApiHash:         apiHash,
+		PhoneNumber:     phoneNumber,
+		BotToken:        botToken,
+		RedisUri:        redisUri,
+		RedisPass:       redisPass,
+		TelethonSession: telethonSession,
+		PyrogramSession: pyrogramSession,
+		GramjsSession:   gramjsSession,
 	}
 }

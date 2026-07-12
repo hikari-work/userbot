@@ -34,13 +34,28 @@ func main() {
 	logger, _ := zap.NewProduction()
 	rateLimiter := ratelimit.New(rate.Every(time.Millisecond*100), 30)
 	newConfig := config.NewConfig()
+	var sessionConstructor sessionMaker.SessionConstructor
+	if newConfig.TelethonSession != "" {
+		slog.Info("Using Telethon string session")
+		sessionConstructor = sessionMaker.TelethonSession(newConfig.TelethonSession)
+	} else if newConfig.PyrogramSession != "" {
+		slog.Info("Using Pyrogram string session")
+		sessionConstructor = sessionMaker.PyrogramSession(newConfig.PyrogramSession)
+	} else if newConfig.GramjsSession != "" {
+		slog.Info("Using GramJS string session")
+		sessionConstructor = sessionMaker.GramjsSession(newConfig.GramjsSession)
+	} else {
+		slog.Info("Using SQL session database")
+		sessionConstructor = sessionMaker.SqlSession(sqlite.Open("user_session"))
+	}
+
 	client, err := gotgproto.NewClient(
 		newConfig.ApiId,
 		newConfig.ApiHash,
 		gotgproto.ClientTypePhone(newConfig.PhoneNumber),
 		&gotgproto.ClientOpts{
 			Logger:      logger,
-			Session:     sessionMaker.SqlSession(sqlite.Open("user_session")),
+			Session:     sessionConstructor,
 			Middlewares: []telegram.Middleware{rateLimiter},
 		})
 	if err != nil {
