@@ -553,6 +553,33 @@
   },
   "JsonErrorGeneral": {
     "other": "❌ <b>Error:</b> {{.Error}}"
+  },
+  "PMPermitWarningMsg": {
+    "other": "⚠️ <b>PM Security Aktif!</b>\nHarap tunggu persetujuan dari pemilik akun sebelum mengirim pesan.\n\nPeringatan: <code>{{.Warn}}/{{.Limit}}</code>"
+  },
+  "PMPermitBlockedMsg": {
+    "other": "❌ <b>Anda telah diblokir karena melakukan spam tanpa persetujuan.</b>"
+  },
+  "PMPermitEnabled": {
+    "other": "✅ <b>PM Security diaktifkan!</b>"
+  },
+  "PMPermitDisabled": {
+    "other": "✅ <b>PM Security dinonaktifkan!</b>"
+  },
+  "PMPermitApproved": {
+    "other": "✅ <b>Pengguna disetujui untuk PM!</b>"
+  },
+  "PMPermitDisapproved": {
+    "other": "✅ <b>Persetujuan pengguna dicabut!</b>"
+  },
+  "PMPermitBlocked": {
+    "other": "❌ <b>Pengguna diblokir!</b>"
+  },
+  "PMPermitUnblocked": {
+    "other": "✅ <b>Pengguna dibuka blokirnya!</b>"
+  },
+  "PMPermitUsage": {
+    "other": "ℹ️ <b>Penggunaan:</b> <code>.pmpermit [on/off]</code>"
   }
 }
 

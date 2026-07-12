@@ -553,6 +553,33 @@
   },
   "JsonErrorGeneral": {
     "other": "❌ <b>Error:</b> {{.Error}}"
+  },
+  "PMPermitWarningMsg": {
+    "other": "⚠️ <b>PM Security is Active!</b>\nPlease wait for the owner's approval before messaging.\n\nWarning: <code>{{.Warn}}/{{.Limit}}</code>"
+  },
+  "PMPermitBlockedMsg": {
+    "other": "❌ <b>You have been blocked for spamming without approval.</b>"
+  },
+  "PMPermitEnabled": {
+    "other": "✅ <b>PM Security enabled!</b>"
+  },
+  "PMPermitDisabled": {
+    "other": "✅ <b>PM Security disabled!</b>"
+  },
+  "PMPermitApproved": {
+    "other": "✅ <b>User approved to PM!</b>"
+  },
+  "PMPermitDisapproved": {
+    "other": "✅ <b>User disapproved!</b>"
+  },
+  "PMPermitBlocked": {
+    "other": "❌ <b>User blocked!</b>"
+  },
+  "PMPermitUnblocked": {
+    "other": "✅ <b>User unblocked!</b>"
+  },
+  "PMPermitUsage": {
+    "other": "ℹ️ <b>Usage:</b> <code>.pmpermit [on/off]</code>"
   }
 }
 

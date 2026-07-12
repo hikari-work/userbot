@@ -11,6 +11,7 @@ import (
 	_ "github.com/hikari-work/userbot/modules/lang"
 	_ "github.com/hikari-work/userbot/modules/menu"
 	_ "github.com/hikari-work/userbot/modules/ping"
+	_ "github.com/hikari-work/userbot/modules/pmpermit"
 	_ "github.com/hikari-work/userbot/modules/prefix"
 	_ "github.com/hikari-work/userbot/modules/status"
 	_ "github.com/hikari-work/userbot/modules/voicechat"
