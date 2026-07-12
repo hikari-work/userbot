@@ -1,12 +1,10 @@
-// Package menu menyediakan menu navigasi utama dengan inline button.
-// Menu ini dikirim menggunakan inline query sehingga bisa digunakan di mana saja
-// tanpa perlu memasukkan bot ke dalam grup/channel.
 package menu
 
 import (
 	"context"
 	"fmt"
 	"math/rand"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -35,6 +33,54 @@ func init() {
 
 		InlineHandler: menuInlineHandler,
 	})
+	manager.Register(&manager.Module{
+		Name:        "List Command",
+		Description: "Tampilkan seluruh menu",
+		Commands:    []string{"listmenu"},
+		OnlyOut:     true,
+		Handler:     listMenu,
+	})
+}
+
+func listMenu(ctx *ext.Context, update *ext.Update) error {
+	uChat := update.EffectiveChat()
+	uMsg := update.EffectiveMessage
+	if uMsg == nil || uChat == nil {
+		return nil
+	}
+
+	prefix, err := dbClient.Redis.Get(ctx, "prefix").Result()
+	if err != nil || prefix == "" {
+		prefix = "."
+	}
+
+	var allCmds []string
+	for _, mod := range manager.Registry {
+		for _, cmd := range mod.Commands {
+			found := false
+			for _, c := range allCmds {
+				if strings.EqualFold(c, cmd) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				allCmds = append(allCmds, cmd)
+			}
+		}
+	}
+
+	sort.Strings(allCmds)
+
+	sb := strings.Builder{}
+	sb.WriteString("📖 <b>MENU BANTUAN USERBOT</b>\n\n")
+	sb.WriteString("<b>Daftar Perintah:</b>\n<blockquote>")
+	sb.WriteString(strings.Join(allCmds, ", "))
+	sb.WriteString("</blockquote>\n\n")
+	sb.WriteString(fmt.Sprintf("Ketik <code>%shelp &lt;nama_modul&gt;</code> untuk melihat detail modul.", prefix))
+
+	_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, sb.String())
+	return err
 }
 
 func menuHandler(ctx *ext.Context, update *ext.Update) error {
@@ -234,4 +280,3 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 
 	return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
 }
-
