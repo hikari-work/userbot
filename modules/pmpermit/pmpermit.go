@@ -123,7 +123,6 @@ func approveHandler(ctx *ext.Context, update *ext.Update) error {
 	dbClient.Redis.SAdd(ctxBg, "userbot:pmpermit:approved", target)
 	dbClient.Redis.Del(ctxBg, fmt.Sprintf("userbot:pmpermit:warns:%d", target))
 
-	// Try to delete previous warning message
 	lastMsgKey := fmt.Sprintf("userbot:pmpermit:lastmsg:%d", target)
 	lastMsgIDStr, err := dbClient.Redis.Get(ctxBg, lastMsgKey).Result()
 	if err == nil && lastMsgIDStr != "" {
