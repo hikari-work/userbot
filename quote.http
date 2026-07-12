@@ -1,0 +1,44 @@
+POST https://quote.yuri.ly/generate.png
+
+{
+  "backgroundColor": "#1b1429",
+  "width": 512,
+  "height": 768,
+  "scale": 2,
+  "emojiBrand": "apple",
+  "messages": [
+    {
+      "from": {
+        "id": 66478514,
+        "first_name": "Yuri 💜",
+        "last_name": "Ly",
+        "username": "LyoSU",
+        "photo": { "big_file_id": "AQAD..." }
+      },
+      "text": "Welcome to the quote generator!",
+      "entities": [
+        {
+          "type": "bold",
+          "offset": 0,
+          "length": 7
+        },
+        {
+          "type": "italic",
+          "offset": 8,
+          "length": 3
+        }
+      ],
+      "avatar": true,
+      "replyMessage": {
+        "name": "Charlie",
+        "text": "How's the weather today?",
+        "entities": [],
+        "chatId": 123456789,
+        "from": {
+          "id": 123456789,
+          "name": "Charlie"
+        }
+      }
+    }
+  ]
+}

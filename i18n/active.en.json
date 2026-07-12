@@ -272,6 +272,15 @@
   "PurgemeReplyRequired": {
     "other": "❌ <b>Please reply to a message to start purgeme from that message.</b>"
   },
+  "QuoteFailed": {
+    "other": "❌ <b>Failed to generate quote:</b> {{.Error}}"
+  },
+  "QuoteGenerating": {
+    "other": "⏳ <b>Generating quote sticker...</b>"
+  },
+  "QuoteReplyRequired": {
+    "other": "❌ <b>Please reply to a message to generate a quote sticker.</b>"
+  },
   "StatusMessage": {
     "other": "<b> SERVER &amp; USERBOT STATUS</b>\n--------------------------------------------\n<b> CPU Usage:</b> <code>{{.CPU}}%</code>\n<b> System RAM:</b>{{.RAM}}\n\n<b> Go Runtime Stats:</b>\n  • Goroutines: <code>{{.Goroutines}}</code>\n  • Go Memory Alloc: <code>{{.GoAlloc}}</code> (sys: <code>{{.GoSys}}</code>)\n  • Go Heap Alloc: <code>{{.GoHeapAlloc}}</code> (sys: <code>{{.GoHeapSys}}</code>)\n  • Go Heap Idle: <code>{{.GoHeapIdle}}</code>\n  • Go GC Cycles: <code>{{.GcCycles}}</code>\n--------------------------------------------\n<b>⏰ Bot Uptime:</b> <code>{{.BotUptime}}</code>\n<b>⚙️ Sys Uptime:</b> <code>{{.SysUptime}}</code>"
   },

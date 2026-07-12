@@ -272,6 +272,15 @@
   "PurgemeReplyRequired": {
     "other": "❌ <b>Silakan balas pesan untuk mulai membersihkan pesan sendiri dari pesan tersebut.</b>"
   },
+  "QuoteFailed": {
+    "other": "❌ <b>Gagal membuat quote:</b> {{.Error}}"
+  },
+  "QuoteGenerating": {
+    "other": "⏳ <b>Membuat sticker quote...</b>"
+  },
+  "QuoteReplyRequired": {
+    "other": "❌ <b>Silakan balas ke suatu pesan untuk membuat sticker quote.</b>"
+  },
   "StatusMessage": {
     "other": "<b> STATUS SERVER &amp; USERBOT</b>\n--------------------------------------------\n<b> CPU Usage:</b> <code>{{.CPU}}%</code>\n<b> System RAM:</b>{{.RAM}}\n\n<b> Go Runtime Stats:</b>\n  • Goroutines: <code>{{.Goroutines}}</code>\n  • Go Memory Alloc: <code>{{.GoAlloc}}</code> (sys: <code>{{.GoSys}}</code>)\n  • Go Heap Alloc: <code>{{.GoHeapAlloc}}</code> (sys: <code>{{.GoHeapSys}}</code>)\n  • Go Heap Idle: <code>{{.GoHeapIdle}}</code>\n  • Go GC Cycles: <code>{{.GcCycles}}</code>\n--------------------------------------------\n<b>⏰ Bot Uptime:</b> <code>{{.BotUptime}}</code>\n<b>⚙️ Sys Uptime:</b> <code>{{.SysUptime}}</code>"
   },
