@@ -520,6 +520,39 @@
   },
   "MediaAutoDLDeact" : {
     "other" : "✅ <b>Auto-download view once media turned on!</b>"
+  },
+  "JsonInvalidChatID": {
+    "other": "❌ Error ChatId Not Valid"
+  },
+  "JsonChatIDNotFound": {
+    "other": "❌ Error ChatId Not Found"
+  },
+  "JsonMessageNotFound": {
+    "other": "❌ <b>Error:</b> Message not found."
+  },
+  "JsonUserNotFound": {
+    "other": "❌ <b>Error:</b> User not found."
+  },
+  "JsonSerializeError": {
+    "other": "❌ <b>Error serializing to JSON:</b> {{.Error}}"
+  },
+  "JsonUploadPasteError": {
+    "other": "❌ <b>Error upload to paste.rs:</b> {{.Error}}"
+  },
+  "JsonViewFullJSON": {
+    "other": "View Full JSON 🔗"
+  },
+  "JsonOutput": {
+    "other": "JSON Output"
+  },
+  "JsonOutputDesc": {
+    "other": "JSON Output from userbot (paste.rs)"
+  },
+  "JsonTruncated": {
+    "other": "... (truncated)"
+  },
+  "JsonErrorGeneral": {
+    "other": "❌ <b>Error:</b> {{.Error}}"
   }
 }
 

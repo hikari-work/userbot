@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"log/slog"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 	"github.com/gotd/td/tg"
 	"github.com/hikari-work/userbot/bot"
 	dbClient "github.com/hikari-work/userbot/connection"
+	"github.com/hikari-work/userbot/i18n"
 	"github.com/hikari-work/userbot/modules/manager"
 	"github.com/hikari-work/userbot/utils"
 )
@@ -50,7 +52,7 @@ func jsonHandler(ctx *ext.Context, update *ext.Update) error {
 			if strings.HasPrefix(userId, "@") {
 				username, err := ctx.ResolveUsername(userId)
 				if err != nil {
-					_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.GetID(), "❌ Error ChatId Not Valid")
+					_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.GetID(), i18n.Localize("JsonInvalidChatID", nil, nil))
 					return err
 				}
 				data = username
@@ -58,7 +60,7 @@ func jsonHandler(ctx *ext.Context, update *ext.Update) error {
 		}
 		id, err := ctx.ResolveInputPeerById(int64(user))
 		if err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.GetID(), "❌ Error ChatId Not Found")
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.GetID(), i18n.Localize("JsonChatIDNotFound", nil, nil))
 			return err
 		}
 		data = id
@@ -71,11 +73,11 @@ func jsonHandler(ctx *ext.Context, update *ext.Update) error {
 			ID: replyHeader.ReplyToMsgID,
 		}})
 		if err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Error:</b> %s", html.EscapeString(err.Error())))
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonErrorGeneral", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
 			return err
 		}
 		if len(msgs) == 0 {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Error:</b> Message not found.")
+			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonMessageNotFound", nil, nil))
 			return nil
 		}
 		data = msgs[0]
@@ -86,7 +88,7 @@ func jsonHandler(ctx *ext.Context, update *ext.Update) error {
 		if uChat.IsAUser() {
 			user := update.EffectiveUser()
 			if user == nil {
-				_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Error:</b> User not found.")
+				_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonUserNotFound", nil, nil))
 				return nil
 			}
 			data = user
@@ -97,7 +99,7 @@ func jsonHandler(ctx *ext.Context, update *ext.Update) error {
 
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Error serializing to JSON:</b> %s", html.EscapeString(err.Error())))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonSerializeError", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
 		return err
 	}
 
@@ -113,11 +115,11 @@ func jsonHandler(ctx *ext.Context, update *ext.Update) error {
 
 	pasteURL, err := uploadToPasteRS(jsonDataStr)
 	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Error upload to paste.rs:</b> %s", html.EscapeString(err.Error())))
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonUploadPasteError", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
 		return err
 	}
 
-	truncatedJSON := string(runes[:100]) + "\n... (truncated)"
+	truncatedJSON := string(runes[:100]) + "\n" + i18n.Localize("JsonTruncated", nil, nil)
 	escapedTruncatedJSON := html.EscapeString(truncatedJSON)
 	responseMessage := fmt.Sprintf("<pre><code class=\"language-json\">%s</code></pre>", escapedTruncatedJSON)
 
@@ -174,7 +176,8 @@ func jsonHandler(ctx *ext.Context, update *ext.Update) error {
 }
 
 func fallbackHTMLMessage(ctx *ext.Context, chatID int64, messageID int, escapedJSON string, pasteURL string) error {
-	response := fmt.Sprintf("<pre><code class=\"language-json\">%s</code></pre>\n\n🔗 <a href=\"%s\">View Full JSON</a>", escapedJSON, pasteURL)
+	viewFullText := i18n.Localize("JsonViewFullJSON", nil, nil)
+	response := fmt.Sprintf("<pre><code class=\"language-json\">%s</code></pre>\n\n🔗 <a href=\"%s\">%s</a>", escapedJSON, pasteURL, viewFullText)
 	_, err := utils.EditMessageHTML(ctx, chatID, messageID, response)
 	return err
 }
@@ -207,7 +210,7 @@ func jsonInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 	buttons := [][]bot.Button{
 		{
 			{
-				Text: "View Full JSON 🔗",
+				Text: i18n.Localize("JsonViewFullJSON", nil, nil),
 				URL:  data.URL,
 			},
 		},
@@ -225,8 +228,8 @@ func jsonInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 			NoWebpage:   true,
 		},
 	}
-	result.SetTitle("JSON Output")
-	result.SetDescription("JSON Output from userbot (paste.rs)")
+	result.SetTitle(i18n.Localize("JsonOutput", nil, nil))
+	result.SetDescription(i18n.Localize("JsonOutputDesc", nil, nil))
 
 	results := []tg.InputBotInlineResultClass{result}
 	return bot.AnswerInlineQuery(ctx, q.QueryID, results)
@@ -240,7 +243,12 @@ func uploadToPasteRS(content string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err2 := resp.Body.Close()
+		if err2 != nil {
+			slog.Error("error to close", err2.Error())
+		}
+	}()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)

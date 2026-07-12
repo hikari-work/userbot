@@ -1,6 +1,7 @@
 package ping
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/celestix/gotgproto/ext"
@@ -18,11 +19,16 @@ func init() {
 	})
 }
 func pingHandler(ctx *ext.Context, update *ext.Update) error {
-	now := time.Now()
-	since := time.Since(now)
+	start := time.Now()
+	_, err := ctx.Raw.HelpGetConfig(ctx)
+	if err != nil {
+		return err
+	}
+	since := time.Since(start)
+	
 	text := i18n.Localize("PongMessage", map[string]interface{}{
-		"Since": since.String(),
+		"Since": fmt.Sprintf("%.2fms", float64(since.Microseconds())/1000.0),
 	}, nil)
-	_, err := ctx.Reply(update, ext.ReplyTextString(text), nil)
+	_, err = ctx.Reply(update, ext.ReplyTextString(text), nil)
 	return err
 }

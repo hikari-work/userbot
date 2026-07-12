@@ -8,7 +8,6 @@ func extractYouTubeURL(text string) string {
 		return ""
 	}
 
-	// 1. Check if there is any HTTP/HTTPS URL in the text
 	words := strings.Fields(text)
 	for _, w := range words {
 		wTrimmed := strings.Trim(w, "()[]{}<>\"'")
@@ -17,17 +16,14 @@ func extractYouTubeURL(text string) string {
 		}
 	}
 
-	// 2. Check if it's a YouTube video ID (11 characters, no spaces)
 	if len(text) == 11 && !strings.Contains(text, " ") {
 		return text
 	}
 
-	// 3. Check if it already has a search prefix
 	if strings.HasPrefix(text, "ytsearch:") || (strings.HasPrefix(text, "ytsearch") && strings.Contains(text, ":")) {
 		return text
 	}
 
-	// 4. Otherwise, treat the whole text as a YouTube search query
 	return "ytsearch1:" + text
 }
 

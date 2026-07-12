@@ -520,6 +520,39 @@
   },
   "MediaAutoDLDeact" : {
     "other" : "✅ <b>Auto-download media sekali lihat di nonaktifkan!</b>"
+  },
+  "JsonInvalidChatID": {
+    "other": "❌ Error ChatId Tidak Valid"
+  },
+  "JsonChatIDNotFound": {
+    "other": "❌ Error ChatId Tidak Ditemukan"
+  },
+  "JsonMessageNotFound": {
+    "other": "❌ <b>Error:</b> Pesan tidak ditemukan."
+  },
+  "JsonUserNotFound": {
+    "other": "❌ <b>Error:</b> Pengguna tidak ditemukan."
+  },
+  "JsonSerializeError": {
+    "other": "❌ <b>Error serializing to JSON:</b> {{.Error}}"
+  },
+  "JsonUploadPasteError": {
+    "other": "❌ <b>Gagal mengunggah ke paste.rs:</b> {{.Error}}"
+  },
+  "JsonViewFullJSON": {
+    "other": "Lihat JSON Lengkap 🔗"
+  },
+  "JsonOutput": {
+    "other": "Output JSON"
+  },
+  "JsonOutputDesc": {
+    "other": "Output JSON dari userbot (paste.rs)"
+  },
+  "JsonTruncated": {
+    "other": "... (dipotong)"
+  },
+  "JsonErrorGeneral": {
+    "other": "❌ <b>Error:</b> {{.Error}}"
   }
 }
 
