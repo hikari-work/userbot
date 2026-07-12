@@ -59,28 +59,7 @@ func getPackageName(handler interface{}) string {
 	return ""
 }
 
-func getLogicalModules(ctx context.Context) []LogicalModule {
-	prettyNames := map[string]string{
-		"admins":    i18n.Localize("module_name_admins", nil, nil),
-		"afk":       i18n.Localize("module_name_afk", nil, nil),
-		"antiflood": i18n.Localize("module_name_antiflood", nil, nil),
-		"download":  i18n.Localize("module_name_download", nil, nil),
-		"ping":      i18n.Localize("module_name_ping", nil, nil),
-		"prefix":    i18n.Localize("module_name_prefix", nil, nil),
-		"status":    i18n.Localize("module_name_status", nil, nil),
-		"voicechat": i18n.Localize("module_name_voicechat", nil, nil),
-	}
-
-	prettyDescriptions := map[string]string{
-		"admins":    i18n.Localize("module_desc_admins", nil, nil),
-		"afk":       i18n.Localize("module_desc_afk", nil, nil),
-		"antiflood": i18n.Localize("module_desc_antiflood", nil, nil),
-		"download":  i18n.Localize("module_desc_download", nil, nil),
-		"ping":      i18n.Localize("module_desc_ping", nil, nil),
-		"prefix":    i18n.Localize("module_desc_prefix", nil, nil),
-		"status":    i18n.Localize("module_desc_status", nil, nil),
-		"voicechat": i18n.Localize("module_desc_voicechat", nil, nil),
-	}
+func getLogicalModules() []LogicalModule {
 
 	groups := make(map[string]*LogicalModule)
 
@@ -99,14 +78,8 @@ func getLogicalModules(ctx context.Context) []LogicalModule {
 
 		lm, exists := groups[pkgName]
 		if !exists {
-			name, ok := prettyNames[pkgName]
-			if !ok {
-				name = strings.ToTitle(pkgName)
-			}
-			desc := prettyDescriptions[pkgName]
-			if desc == "" {
-				desc = mod.Description
-			}
+			name := strings.ToTitle(pkgName)
+			desc := mod.Description
 
 			lm = &LogicalModule{
 				ID:          pkgName,
@@ -143,8 +116,8 @@ func getLogicalModules(ctx context.Context) []LogicalModule {
 	return list
 }
 
-func getModulesPage(ctx context.Context, page int, chatID int64) (string, [][]bot.Button) {
-	logicalMods := getLogicalModules(ctx)
+func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
+	logicalMods := getLogicalModules()
 	totalModules := len(logicalMods)
 
 	totalPages := (totalModules + pageSize - 1) / pageSize

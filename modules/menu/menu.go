@@ -181,7 +181,7 @@ func menuInlineHandler(ctx context.Context, q *tg.UpdateBotInlineQuery) error {
 		chatID, _ = strconv.ParseInt(parts[1], 10, 64)
 	}
 
-	text, buttons := getModulesPage(ctx, 0, chatID)
+	text, buttons := getModulesPage(0, chatID)
 	keyboard := bot.BuildInlineKeyboard(buttons)
 
 	plainText, entities := utils.ParseHTML(text)
@@ -215,7 +215,7 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		pageNum, _ := strconv.Atoi(parts[0])
 		chatID, _ := strconv.ParseInt(parts[1], 10, 64)
 
-		text, buttons := getModulesPage(ctx, pageNum, chatID)
+		text, buttons := getModulesPage(pageNum, chatID)
 		if q.IsInline {
 			_ = bot.EditInlineBotMessage(q.InlineMessageID, text, buttons)
 		} else {
@@ -234,7 +234,7 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 		fromPageStr := parts[1]
 		chatID, _ := strconv.ParseInt(parts[2], 10, 64)
 
-		logicalMods := getLogicalModules(ctx)
+		logicalMods := getLogicalModules()
 		var targetMod *LogicalModule
 		for i := range logicalMods {
 			if logicalMods[i].ID == modID {

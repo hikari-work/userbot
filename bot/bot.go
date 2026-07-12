@@ -39,14 +39,16 @@ func (b *Client) Run(ctx context.Context) error {
 		switch upds := u.(type) {
 		case *tg.Updates:
 			for _, upd := range upds.Updates {
-				dispatch(ctx, b.api, upd)
+				updCopy := upd
+				go dispatch(context.Background(), b.api, updCopy)
 			}
 		case *tg.UpdatesCombined:
 			for _, upd := range upds.Updates {
-				dispatch(ctx, b.api, upd)
+				updCopy := upd
+				go dispatch(context.Background(), b.api, updCopy)
 			}
 		case *tg.UpdateShort:
-			dispatch(ctx, b.api, upds.Update)
+			go dispatch(context.Background(), b.api, upds.Update)
 		}
 		return nil
 	})
