@@ -23,7 +23,12 @@ func init() {
 		Commands:    []string{"q", "quote"},
 		OnlyOut:     true,
 		Handler:     quoteHandler,
+		Help:        quoteHelp,
 	})
+}
+
+func quoteHelp() string {
+	return "Format \nbalas ke pesan dengan: <code>.q [jumlah] [warna]</code>\n<code>Contoh : .q 2 #ffffff</code>"
 }
 
 func quoteHandler(ctx *ext.Context, update *ext.Update) error {

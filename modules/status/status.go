@@ -25,7 +25,12 @@ func init() {
 		Commands:    []string{"status", "server"},
 		OnlyOut:     true,
 		Handler:     statusHandler,
+		Help:        statusHelp,
 	})
+}
+
+func statusHelp() string {
+	return "Format \n<code>.status</code>\n<code>Contoh : .status</code>"
 }
 
 type cpuTime struct {

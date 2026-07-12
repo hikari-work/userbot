@@ -23,7 +23,11 @@ func init() {
 		OnlyOut:     true,
 		Handler:     blacklistHandler,
 		OnMessage:   blacklistMessageHook,
+		Help:        blacklistHelp,
 	})
+}
+func blacklistHelp() string {
+	return "Format \n<code>.bl &lt;add/del/remove/delete&gt; &lt;word&gt;</code>\n<code>Contoh : .bl add surya</code>"
 }
 
 func blacklistHandler(ctx *ext.Context, update *ext.Update) error {

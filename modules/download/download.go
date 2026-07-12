@@ -21,7 +21,12 @@ func init() {
 		OnlyOut:     true,
 		Handler:     downloadHandler,
 		OnMessage:   autoForward,
+		Help:        downloadHelp,
 	})
+}
+
+func downloadHelp() string {
+	return "Format \n<code>.dl &lt;link_pesan&gt;</code>\n<code>Contoh : .dl https://t.me/c/123456789/123</code>"
 }
 
 

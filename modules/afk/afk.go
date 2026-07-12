@@ -19,7 +19,12 @@ func init() {
 		OnlyOut:     true,
 		Handler:     afkCommandHandler,
 		OnMessage:   afkMessageHook,
+		Help:        afkHelp,
 	})
+}
+
+func afkHelp() string {
+	return "Format \n<code>.afk &lt;alasan&gt;</code>\n<code>Contoh : .afk makan</code>"
 }
 
 func afkCommandHandler(ctx *ext.Context, update *ext.Update) error {

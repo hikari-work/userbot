@@ -21,6 +21,7 @@ func init() {
 		OnlyOut:     true,
 		Handler:     pmpermitToggleHandler,
 		OnMessage:   pmpermitMessageHook,
+		Help:        pmpermitHelp,
 	})
 
 	manager.Register(&manager.Module{
@@ -29,6 +30,7 @@ func init() {
 		Commands:    []string{"approve", "a"},
 		OnlyOut:     true,
 		Handler:     approveHandler,
+		Help:        approveHelp,
 	})
 
 	manager.Register(&manager.Module{
@@ -37,6 +39,7 @@ func init() {
 		Commands:    []string{"disapprove", "da"},
 		OnlyOut:     true,
 		Handler:     disapproveHandler,
+		Help:        disapproveHelp,
 	})
 
 	manager.Register(&manager.Module{
@@ -45,6 +48,7 @@ func init() {
 		Commands:    []string{"block"},
 		OnlyOut:     true,
 		Handler:     blockHandler,
+		Help:        blockHelp,
 	})
 
 	manager.Register(&manager.Module{
@@ -53,7 +57,28 @@ func init() {
 		Commands:    []string{"unblock"},
 		OnlyOut:     true,
 		Handler:     unblockHandler,
+		Help:        unblockHelp,
 	})
+}
+
+func pmpermitHelp() string {
+	return "Format \n<code>.pmpermit &lt;on/off&gt;</code>\n<code>Contoh : .pmpermit on</code>"
+}
+
+func approveHelp() string {
+	return "Format \n<code>.approve</code> atau balas pesannya dengan <code>.approve</code>\n<code>Contoh : .approve</code>"
+}
+
+func disapproveHelp() string {
+	return "Format \n<code>.disapprove</code> atau balas pesannya dengan <code>.disapprove</code>\n<code>Contoh : .disapprove</code>"
+}
+
+func blockHelp() string {
+	return "Format \n<code>.block</code> atau balas pesannya dengan <code>.block</code>\n<code>Contoh : .block</code>"
+}
+
+func unblockHelp() string {
+	return "Format \n<code>.unblock</code> atau balas pesannya dengan <code>.unblock</code>\n<code>Contoh : .unblock</code>"
 }
 
 func getTargetUser(ctx *ext.Context, update *ext.Update) (int64, bool) {

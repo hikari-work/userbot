@@ -15,7 +15,12 @@ func init() {
 		Commands:    []string{"demote"},
 		OnlyOut:     true,
 		Handler:     demoteHandler,
+		Help:        demoteHelp,
 	})
+}
+
+func demoteHelp() string {
+	return "Format \n<code>.demote &lt;reply/username/id&gt;</code>\n<code>Contoh : .demote @username</code>"
 }
 
 func demoteHandler(ctx *ext.Context, update *ext.Update) error {

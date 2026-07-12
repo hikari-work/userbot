@@ -15,6 +15,7 @@ func init() {
 		Commands:    []string{"ban"},
 		OnlyOut:     true,
 		Handler:     banHandler,
+		Help:        banHelp,
 	})
 
 	manager.Register(&manager.Module{
@@ -23,6 +24,7 @@ func init() {
 		Commands:    []string{"unban"},
 		OnlyOut:     true,
 		Handler:     unbanHandler,
+		Help:        unbanHelp,
 	})
 
 	manager.Register(&manager.Module{
@@ -31,7 +33,20 @@ func init() {
 		Commands:    []string{"kick"},
 		OnlyOut:     true,
 		Handler:     kickHandler,
+		Help:        kickHelp,
 	})
+}
+
+func banHelp() string {
+	return "Format: <code>.ban &lt;reply/username/id&gt;</code>\nContoh: <code>.ban @username</code>"
+}
+
+func unbanHelp() string {
+	return "Format: <code>.unban &lt;reply/username/id&gt;</code>\nContoh: <code>.unban @username</code>"
+}
+
+func kickHelp() string {
+	return "Format: <code>.kick &lt;reply/username/id&gt;</code>\nContoh: <code>.kick @username</code>"
 }
 
 func banHandler(ctx *ext.Context, update *ext.Update) error {

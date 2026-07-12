@@ -40,6 +40,13 @@ func init() {
 		OnlyOut:     true,
 		Handler:     listMenu,
 	})
+	manager.Register(&manager.Module{
+		Name:        "Help",
+		Description: "Tampilkan panduan bantuan untuk modul",
+		Commands:    []string{"help"},
+		OnlyOut:     true,
+		Handler:     helpHandler,
+	})
 }
 
 func listMenu(ctx *ext.Context, update *ext.Update) error {
@@ -77,7 +84,7 @@ func listMenu(ctx *ext.Context, update *ext.Update) error {
 	sb.WriteString("<b>Daftar Perintah:</b>\n<blockquote>")
 	sb.WriteString(strings.Join(allCmds, ", "))
 	sb.WriteString("</blockquote>\n\n")
-	sb.WriteString(fmt.Sprintf("Ketik <code>%shelp &lt;nama_modul&gt;</code> untuk melihat detail modul.", prefix))
+	sb.WriteString(fmt.Sprintf("Ketik <code>%shelp &lt;nama_perintah&gt;</code> untuk melihat detail perintah.", prefix))
 
 	_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, sb.String())
 	return err
@@ -279,4 +286,66 @@ func menuCallbackHandler(ctx context.Context, q *manager.CallbackQuery) error {
 	}
 
 	return bot.AnswerCallbackQuery(ctx, q.QueryID, "", false)
+}
+
+func helpHandler(ctx *ext.Context, update *ext.Update) error {
+	uChat := update.EffectiveChat()
+	uMsg := update.EffectiveMessage
+	if uMsg == nil || uChat == nil {
+		return nil
+	}
+
+	args := update.Args()
+	prefix, err := dbClient.Redis.Get(ctx, "prefix").Result()
+	if err != nil || prefix == "" {
+		prefix = "."
+	}
+
+	if len(args) < 2 {
+		return listMenu(ctx, update)
+	}
+
+	moduleName := strings.TrimSpace(args[1])
+	var targetMod *manager.Module
+
+	for _, mod := range manager.Registry {
+		if strings.EqualFold(mod.Name, moduleName) {
+			targetMod = mod
+			break
+		}
+		for _, cmd := range mod.Commands {
+			if strings.EqualFold(cmd, moduleName) {
+				targetMod = mod
+				break
+			}
+		}
+	}
+
+	if targetMod == nil {
+		text := fmt.Sprintf("❌ <b>Modul atau perintah '%s' tidak ditemukan.</b>\nKetik <code>%slistmenu</code> untuk melihat daftar perintah.", moduleName, prefix)
+		_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, text)
+		return err
+	}
+
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("📖 <b>BANTUAN MODUL: %s</b>\n\n", strings.ToUpper(targetMod.Name)))
+	sb.WriteString(fmt.Sprintf("📝 <b>Deskripsi:</b> %s\n", targetMod.Description))
+
+	if len(targetMod.Commands) > 0 {
+		var cmds []string
+		for _, c := range targetMod.Commands {
+			cmds = append(cmds, fmt.Sprintf("<code>%s%s</code>", prefix, c))
+		}
+		sb.WriteString(fmt.Sprintf("🛠️ <b>Perintah:</b> %s\n\n", strings.Join(cmds, ", ")))
+	}
+
+	if targetMod.Help != nil {
+		helpText := targetMod.Help()
+		if helpText != "" {
+			sb.WriteString(fmt.Sprintf("💡 <b>Panduan Penggunaan:</b>\n%s", helpText))
+		}
+	}
+
+	_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, sb.String())
+	return err
 }

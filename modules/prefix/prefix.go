@@ -18,7 +18,12 @@ func init() {
 		Commands:    []string{"prefix", "pre"},
 		OnlyOut:     true,
 		Handler:     handlerPrefix,
+		Help:        prefixHelp,
 	})
+}
+
+func prefixHelp() string {
+	return "Format \n<code>.prefix &lt;simbol&gt;</code>\n<code>Contoh : .prefix !</code>"
 }
 
 func handlerPrefix(ctx *ext.Context, update *ext.Update) error {

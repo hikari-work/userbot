@@ -27,7 +27,12 @@ func init() {
 		CallbackPrefix:  "",
 		CallbackHandler: nil,
 		InlineHandler:   nil,
+		Help:            filterHelp,
 	})
+}
+
+func filterHelp() string {
+	return "Format \n<code>.filter &lt;keyword&gt; &lt;balasan&gt;</code>\n<code>Contoh : .filter halo selamat datang</code>"
 }
 
 func filterCommandHandler(ctx *ext.Context, update *ext.Update) error {

@@ -15,6 +15,7 @@ func init() {
 		Commands:    []string{"purge"},
 		OnlyOut:     true,
 		Handler:     purgeHandler,
+		Help:        purgeHelp,
 	})
 
 	manager.Register(&manager.Module{
@@ -23,7 +24,16 @@ func init() {
 		Commands:    []string{"purgeme"},
 		OnlyOut:     true,
 		Handler:     purgeMeHandler,
+		Help:        purgeMeHelp,
 	})
+}
+
+func purgeHelp() string {
+	return "Format \nbalas ke pesan dengan: <code>.purge</code>\n<code>Contoh : .purge</code>"
+}
+
+func purgeMeHelp() string {
+	return "Format \nbalas ke pesan dengan: <code>.purgeme</code>\n<code>Contoh : .purgeme</code>"
 }
 
 func purgeHandler(ctx *ext.Context, update *ext.Update) error {

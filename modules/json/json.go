@@ -29,7 +29,12 @@ func init() {
 		OnlyOut:       true,
 		Handler:       jsonHandler,
 		InlineHandler: jsonInlineHandler,
+		Help:          jsonHelp,
 	})
+}
+
+func jsonHelp() string {
+	return "Format \n<code>.json &lt;reply/id/username&gt;</code>\n<code>Contoh : .json @username</code>"
 }
 
 func jsonHandler(ctx *ext.Context, update *ext.Update) error {

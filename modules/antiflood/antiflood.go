@@ -21,6 +21,7 @@ func init() {
 		OnlyOut:     true,
 		Handler:     setFloodHandler,
 		OnMessage:   floodMessageHook,
+		Help:        setfloodHelp,
 	})
 
 	manager.Register(&manager.Module{
@@ -29,7 +30,16 @@ func init() {
 		Commands:    []string{"getflood"},
 		OnlyOut:     true,
 		Handler:     getFloodHandler,
+		Help:        getfloodHelp,
 	})
+}
+
+func setfloodHelp() string {
+	return "Format \n<code>.setflood &lt;jumlah_pesan&gt;</code>\n<code>Contoh : .setflood 5</code>"
+}
+
+func getfloodHelp() string {
+	return "Format \n<code>.getflood</code>\n<code>Contoh : .getflood</code>"
 }
 
 func setFloodHandler(ctx *ext.Context, update *ext.Update) error {

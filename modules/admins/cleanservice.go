@@ -20,7 +20,12 @@ func init() {
 		OnlyOut:     true,
 		Handler:     cleanServiceHandler,
 		OnMessage:   cleanServiceMessageHook,
+		Help:        helpCleanService,
 	})
+}
+
+func helpCleanService() string {
+	return "Format : \n<code>.cleanservice &lt;on/yes/true/1&gt;</code> "
 }
 
 func cleanServiceHandler(ctx *ext.Context, update *ext.Update) error {

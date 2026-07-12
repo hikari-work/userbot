@@ -27,7 +27,12 @@ func init() {
 		CallbackPrefix:  "lang",
 		CallbackHandler: langCallbackHandler,
 		InlineHandler:   langInlineHandler,
+		Help:            langHelp,
 	})
+}
+
+func langHelp() string {
+	return "Format \n<code>.lang</code>\n<code>Contoh : .lang</code>"
 }
 
 func langHandler(ctx *ext.Context, update *ext.Update) error {

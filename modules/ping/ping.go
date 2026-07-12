@@ -16,7 +16,12 @@ func init() {
 		Commands:    []string{"ping", "p"},
 		OnlyOut:     true,
 		Handler:     pingHandler,
+		Help:        pingHelp,
 	})
+}
+
+func pingHelp() string {
+	return "Format \n<code>.ping</code>\n<code>Contoh : .ping</code>"
 }
 func pingHandler(ctx *ext.Context, update *ext.Update) error {
 	start := time.Now()

@@ -15,7 +15,12 @@ func init() {
 		Commands:    []string{"promote"},
 		OnlyOut:     true,
 		Handler:     promoteHandler,
+		Help:        promoteHelp,
 	})
+}
+
+func promoteHelp() string {
+	return "Format \n<code>.promote &lt;reply/username/id&gt; &lt;title&gt;</code>\n<code>Contoh : .promote @username Admin</code>"
 }
 
 func promoteHandler(ctx *ext.Context, update *ext.Update) error {

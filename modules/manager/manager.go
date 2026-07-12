@@ -11,6 +11,7 @@ import (
 var ErrNotMatched = errors.New("query not matched")
 
 type ModuleHandler func(ctx *ext.Context, update *ext.Update) error
+type HelpString func() string
 
 type InlineQueryHandler func(ctx context.Context, query *tg.UpdateBotInlineQuery) error
 
@@ -32,6 +33,7 @@ type Module struct {
 	Description string
 	Commands    []string
 	OnlyOut     bool
+	Help        HelpString
 
 	Handler   ModuleHandler
 	OnMessage ModuleHandler
