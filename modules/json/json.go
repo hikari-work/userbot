@@ -39,139 +39,150 @@ func jsonHandler(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	var data any
-	var err error
-	hasData := false
+	bgCtx := *ctx
+	bgCtx.Context = context.Background()
 
-	args := update.Args()
-	if len(args) > 1 {
-		userId := args[1]
-		user, err := strconv.Atoi(userId)
-		if err != nil {
-			if strings.HasPrefix(userId, "@") {
-				username, err := ctx.ResolveUsername(userId)
-				if err != nil {
-					_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.GetID(), i18n.Localize("JsonInvalidChatID", nil, nil))
-					return err
+	go func() {
+		var data any
+		var err error
+		hasData := false
+
+		args := update.Args()
+		if len(args) > 1 {
+			userId := args[1]
+			user, err := strconv.Atoi(userId)
+			if err != nil {
+				if strings.HasPrefix(userId, "@") {
+					username, err := bgCtx.ResolveUsername(userId)
+					if err != nil {
+						_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), uMsg.GetID(), i18n.Localize("JsonInvalidChatID", nil, nil))
+						return
+					}
+					data = username
 				}
-				data = username
+			}
+			id, err := bgCtx.ResolveInputPeerById(int64(user))
+			if err != nil {
+				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), uMsg.GetID(), i18n.Localize("JsonChatIDNotFound", nil, nil))
+				return
+			}
+			data = id
+			hasData = true
+		}
+
+		if replyHeader, ok := uMsg.ReplyTo.(*tg.MessageReplyHeader); ok && replyHeader.ReplyToMsgID != 0 {
+			var msgs []tg.MessageClass
+			msgs, err = bgCtx.GetMessages(uChat.GetID(), []tg.InputMessageClass{&tg.InputMessageID{
+				ID: replyHeader.ReplyToMsgID,
+			}})
+			if err != nil {
+				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonErrorGeneral", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
+				return
+			}
+			if len(msgs) == 0 {
+				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonMessageNotFound", nil, nil))
+				return
+			}
+			data = msgs[0]
+			hasData = true
+		}
+
+		if !hasData {
+			if uChat.IsAUser() {
+				user := update.EffectiveUser()
+				if user == nil {
+					_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonUserNotFound", nil, nil))
+					return
+				}
+				data = user
+			} else {
+				data = uChat
 			}
 		}
-		id, err := ctx.ResolveInputPeerById(int64(user))
-		if err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.GetID(), i18n.Localize("JsonChatIDNotFound", nil, nil))
-			return err
-		}
-		data = id
-		hasData = true
-	}
 
-	if replyHeader, ok := uMsg.ReplyTo.(*tg.MessageReplyHeader); ok && replyHeader.ReplyToMsgID != 0 {
-		var msgs []tg.MessageClass
-		msgs, err = ctx.GetMessages(uChat.GetID(), []tg.InputMessageClass{&tg.InputMessageID{
-			ID: replyHeader.ReplyToMsgID,
-		}})
+		jsonData, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonErrorGeneral", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
-			return err
+			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonSerializeError", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
+			return
 		}
-		if len(msgs) == 0 {
-			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonMessageNotFound", nil, nil))
-			return nil
-		}
-		data = msgs[0]
-		hasData = true
-	}
 
-	if !hasData {
-		if uChat.IsAUser() {
-			user := update.EffectiveUser()
-			if user == nil {
-				_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonUserNotFound", nil, nil))
-				return nil
+		jsonDataStr := string(jsonData)
+		runes := []rune(jsonDataStr)
+
+		if len(runes) <= 100 {
+			escapedJSON := html.EscapeString(jsonDataStr)
+			response := fmt.Sprintf("<pre><code class=\"language-json\">%s</code></pre>", escapedJSON)
+			_, err = utils.EditMessageHTML(&bgCtx, uChat.GetID(), uMsg.ID, response)
+			return
+		}
+
+		pasteURL, err := uploadToPasteRS(jsonDataStr)
+		if err != nil {
+			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonUploadPasteError", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
+			return
+		}
+
+		truncatedJSON := string(runes[:100]) + "\n" + i18n.Localize("JsonTruncated", nil, nil)
+		escapedTruncatedJSON := html.EscapeString(truncatedJSON)
+		responseMessage := fmt.Sprintf("<pre><code class=\"language-json\">%s</code></pre>", escapedTruncatedJSON)
+
+		if bot.IsActive() && bot.Username != "" {
+			botInputPeer, err := bgCtx.ResolveUsername(bot.Username)
+			if err != nil {
+				_ = fallbackHTMLMessage(&bgCtx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
+				return
 			}
-			data = user
-		} else {
-			data = uChat
-		}
-	}
 
-	jsonData, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonSerializeError", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
-		return err
-	}
+			chatInputPeer, err := bgCtx.ResolveInputPeerById(uChat.GetID())
+			if err != nil {
+				return
+			}
 
-	jsonDataStr := string(jsonData)
-	runes := []rune(jsonDataStr)
+			randomID := fmt.Sprintf("%d", rand.Int63())
+			redisKey := fmt.Sprintf("json_paste:%s", randomID)
 
-	if len(runes) <= 100 {
-		escapedJSON := html.EscapeString(jsonDataStr)
-		response := fmt.Sprintf("<pre><code class=\"language-json\">%s</code></pre>", escapedJSON)
-		_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, response)
-		return err
-	}
+			payload := map[string]string{
+				"text": responseMessage,
+				"url":  pasteURL,
+			}
+			payloadBytes, _ := json.Marshal(payload)
+			err = dbClient.Redis.Set(&bgCtx, redisKey, string(payloadBytes), 10*time.Minute).Err()
+			if err != nil {
+				_ = fallbackHTMLMessage(&bgCtx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
+				return
+			}
 
-	pasteURL, err := uploadToPasteRS(jsonDataStr)
-	if err != nil {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("JsonUploadPasteError", map[string]any{"Error": html.EscapeString(err.Error())}, nil))
-		return err
-	}
+			_ = bgCtx.DeleteMessages(uChat.GetID(), []int{uMsg.ID})
 
-	truncatedJSON := string(runes[:100]) + "\n" + i18n.Localize("JsonTruncated", nil, nil)
-	escapedTruncatedJSON := html.EscapeString(truncatedJSON)
-	responseMessage := fmt.Sprintf("<pre><code class=\"language-json\">%s</code></pre>", escapedTruncatedJSON)
+			results, err := bgCtx.Raw.MessagesGetInlineBotResults(&bgCtx, &tg.MessagesGetInlineBotResultsRequest{
+				Bot:    botInputPeer.GetInputUser(),
+				Peer:   chatInputPeer,
+				Query:  fmt.Sprintf("json:%s", randomID),
+				Offset: "",
+			})
+			if err != nil {
+				_ = fallbackHTMLMessage(&bgCtx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
+				return
+			}
 
-	if bot.IsActive() && bot.Username != "" {
-		botInputPeer, err := ctx.ResolveUsername(bot.Username)
-		if err != nil {
-			return fallbackHTMLMessage(ctx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
-		}
+			if len(results.Results) == 0 {
+				_ = fallbackHTMLMessage(&bgCtx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
+				return
+			}
 
-		chatInputPeer, err := ctx.ResolveInputPeerById(uChat.GetID())
-		if err != nil {
-			return err
-		}
-
-		randomID := fmt.Sprintf("%d", rand.Int63())
-		redisKey := fmt.Sprintf("json_paste:%s", randomID)
-
-		payload := map[string]string{
-			"text": responseMessage,
-			"url":  pasteURL,
-		}
-		payloadBytes, _ := json.Marshal(payload)
-		err = dbClient.Redis.Set(ctx, redisKey, string(payloadBytes), 10*time.Minute).Err()
-		if err != nil {
-			return fallbackHTMLMessage(ctx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
+			_, err = bgCtx.Raw.MessagesSendInlineBotResult(&bgCtx, &tg.MessagesSendInlineBotResultRequest{
+				Peer:     chatInputPeer,
+				RandomID: rand.Int63(),
+				QueryID:  results.QueryID,
+				ID:       results.Results[0].GetID(),
+			})
+			return
 		}
 
-		_ = ctx.DeleteMessages(uChat.GetID(), []int{uMsg.ID})
+		_ = fallbackHTMLMessage(&bgCtx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
+	}()
 
-		results, err := ctx.Raw.MessagesGetInlineBotResults(ctx, &tg.MessagesGetInlineBotResultsRequest{
-			Bot:    botInputPeer.GetInputUser(),
-			Peer:   chatInputPeer,
-			Query:  fmt.Sprintf("json:%s", randomID),
-			Offset: "",
-		})
-		if err != nil {
-			return fallbackHTMLMessage(ctx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
-		}
-
-		if len(results.Results) == 0 {
-			return fallbackHTMLMessage(ctx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
-		}
-
-		_, err = ctx.Raw.MessagesSendInlineBotResult(ctx, &tg.MessagesSendInlineBotResultRequest{
-			Peer:     chatInputPeer,
-			RandomID: rand.Int63(),
-			QueryID:  results.QueryID,
-			ID:       results.Results[0].GetID(),
-		})
-		return err
-	}
-
-	return fallbackHTMLMessage(ctx, uChat.GetID(), uMsg.ID, escapedTruncatedJSON, pasteURL)
+	return nil
 }
 
 func fallbackHTMLMessage(ctx *ext.Context, chatID int64, messageID int, escapedJSON string, pasteURL string) error {
