@@ -56,6 +56,21 @@ func init() {
 	})
 }
 
+func getTargetUser(ctx *ext.Context, update *ext.Update) (int64, bool) {
+	uChat := update.EffectiveChat()
+	uMsg := update.EffectiveMessage
+
+	target, err := utils.ExtractUser(ctx, uMsg, uChat)
+	if err != nil {
+		if uChat.IsAUser() {
+			return uChat.GetID(), true
+		}
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, "❌ <b>Error:</b> Tentukan pengguna.")
+		return 0, false
+	}
+	return target, true
+}
+
 func pmpermitToggleHandler(ctx *ext.Context, update *ext.Update) error {
 	uChat := update.EffectiveChat()
 	uMsg := update.EffectiveMessage
@@ -69,12 +84,8 @@ func pmpermitToggleHandler(ctx *ext.Context, update *ext.Update) error {
 		if err == nil && enabled == "false" {
 			status = "disabled"
 		}
-		text, entities := utils.ParseHTML(fmt.Sprintf("ℹ️ <b>PM Security Status:</b> <code>%s</code>\n\n%s", status, i18n.Localize("PMPermitUsage", nil, nil)))
-		_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			ID:       uMsg.ID,
-			Message:  text,
-			Entities: entities,
-		})
+		htmlStr := fmt.Sprintf("ℹ️ <b>PM Security Status:</b> <code>%s</code>\n\n%s", status, i18n.Localize("PMPermitUsage", nil, nil))
+		_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, htmlStr)
 		return err
 	}
 
@@ -84,54 +95,29 @@ func pmpermitToggleHandler(ctx *ext.Context, update *ext.Update) error {
 		if err != nil {
 			return err
 		}
-		text, entities := utils.ParseHTML(i18n.Localize("PMPermitEnabled", nil, nil))
-		_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			ID:       uMsg.ID,
-			Message:  text,
-			Entities: entities,
-		})
+		_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PMPermitEnabled", nil, nil))
 		return err
 	} else if cmd == "off" || cmd == "disable" || cmd == "false" {
 		err := dbClient.Redis.Set(ctxBg, "userbot:pmpermit:enabled", "false", 0).Err()
 		if err != nil {
 			return err
 		}
-		text, entities := utils.ParseHTML(i18n.Localize("PMPermitDisabled", nil, nil))
-		_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			ID:       uMsg.ID,
-			Message:  text,
-			Entities: entities,
-		})
+		_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PMPermitDisabled", nil, nil))
 		return err
 	}
 
-	text, entities := utils.ParseHTML(i18n.Localize("PMPermitUsage", nil, nil))
-	_, err := ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-		ID:       uMsg.ID,
-		Message:  text,
-		Entities: entities,
-	})
+	_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PMPermitUsage", nil, nil))
 	return err
 }
 
 func approveHandler(ctx *ext.Context, update *ext.Update) error {
+	target, ok := getTargetUser(ctx, update)
+	if !ok {
+		return nil
+	}
+
 	uChat := update.EffectiveChat()
 	uMsg := update.EffectiveMessage
-
-	target, err := utils.ExtractUser(ctx, uMsg, uChat)
-	if err != nil {
-		if uChat.IsAUser() {
-			target = uChat.GetID()
-		} else {
-			text, entities := utils.ParseHTML("❌ <b>Error:</b> Tentukan pengguna.")
-			_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-				ID:       uMsg.ID,
-				Message:  text,
-				Entities: entities,
-			})
-			return nil
-		}
-	}
 
 	ctxBg := ctx
 	dbClient.Redis.SAdd(ctxBg, "userbot:pmpermit:approved", target)
@@ -147,84 +133,44 @@ func approveHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 	dbClient.Redis.Del(ctxBg, lastMsgKey)
 
-	text, entities := utils.ParseHTML(i18n.Localize("PMPermitApproved", nil, nil))
-	_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-		ID:       uMsg.ID,
-		Message:  text,
-		Entities: entities,
-	})
+	_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PMPermitApproved", nil, nil))
 	return err
 }
 
 func disapproveHandler(ctx *ext.Context, update *ext.Update) error {
+	target, ok := getTargetUser(ctx, update)
+	if !ok {
+		return nil
+	}
+
 	uChat := update.EffectiveChat()
 	uMsg := update.EffectiveMessage
-
-	target, err := utils.ExtractUser(ctx, uMsg, uChat)
-	if err != nil {
-		if uChat.IsAUser() {
-			target = uChat.GetID()
-		} else {
-			text, entities := utils.ParseHTML("❌ <b>Error:</b> Tentukan pengguna.")
-			_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-				ID:       uMsg.ID,
-				Message:  text,
-				Entities: entities,
-			})
-			return nil
-		}
-	}
 
 	ctxBg := ctx
 	dbClient.Redis.SRem(ctxBg, "userbot:pmpermit:approved", target)
 
-	text, entities := utils.ParseHTML(i18n.Localize("PMPermitDisapproved", nil, nil))
-	_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-		ID:       uMsg.ID,
-		Message:  text,
-		Entities: entities,
-	})
+	_, err := utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PMPermitDisapproved", nil, nil))
 	return err
 }
 
 func blockHandler(ctx *ext.Context, update *ext.Update) error {
+	target, ok := getTargetUser(ctx, update)
+	if !ok {
+		return nil
+	}
+
 	uChat := update.EffectiveChat()
 	uMsg := update.EffectiveMessage
 
-	target, err := utils.ExtractUser(ctx, uMsg, uChat)
-	if err != nil {
-		if uChat.IsAUser() {
-			target = uChat.GetID()
-		} else {
-			text, entities := utils.ParseHTML("❌ <b>Error:</b> Tentukan pengguna.")
-			_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-				ID:       uMsg.ID,
-				Message:  text,
-				Entities: entities,
-			})
-			return nil
-		}
-	}
-
 	inputPeer, err := ctx.ResolveInputPeerById(target)
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Error:</b> %s", err.Error()))
-		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			ID:       uMsg.ID,
-			Message:  text,
-			Entities: entities,
-		})
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Error:</b> %s", err.Error()))
 		return nil
 	}
 
 	_, err = ctx.Raw.ContactsBlock(ctx, &tg.ContactsBlockRequest{ID: inputPeer})
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Error:</b> %s", err.Error()))
-		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			ID:       uMsg.ID,
-			Message:  text,
-			Entities: entities,
-		})
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Error:</b> %s", err.Error()))
 		return nil
 	}
 
@@ -232,61 +178,31 @@ func blockHandler(ctx *ext.Context, update *ext.Update) error {
 	dbClient.Redis.SRem(ctxBg, "userbot:pmpermit:approved", target)
 	dbClient.Redis.Del(ctxBg, fmt.Sprintf("userbot:pmpermit:warns:%d", target))
 
-	text, entities := utils.ParseHTML(i18n.Localize("PMPermitBlocked", nil, nil))
-	_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-		ID:       uMsg.ID,
-		Message:  text,
-		Entities: entities,
-	})
+	_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PMPermitBlocked", nil, nil))
 	return err
 }
 
 func unblockHandler(ctx *ext.Context, update *ext.Update) error {
+	target, ok := getTargetUser(ctx, update)
+	if !ok {
+		return nil
+	}
+
 	uChat := update.EffectiveChat()
 	uMsg := update.EffectiveMessage
 
-	target, err := utils.ExtractUser(ctx, uMsg, uChat)
-	if err != nil {
-		if uChat.IsAUser() {
-			target = uChat.GetID()
-		} else {
-			text, entities := utils.ParseHTML("❌ <b>Error:</b> Tentukan pengguna.")
-			_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-				ID:       uMsg.ID,
-				Message:  text,
-				Entities: entities,
-			})
-			return nil
-		}
-	}
-
 	inputPeer, err := ctx.ResolveInputPeerById(target)
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Error:</b> %s", err.Error()))
-		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			ID:       uMsg.ID,
-			Message:  text,
-			Entities: entities,
-		})
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Error:</b> %s", err.Error()))
 		return nil
 	}
 
 	_, err = ctx.Raw.ContactsUnblock(ctx, &tg.ContactsUnblockRequest{ID: inputPeer})
 	if err != nil {
-		text, entities := utils.ParseHTML(fmt.Sprintf("❌ <b>Error:</b> %s", err.Error()))
-		_, _ = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-			ID:       uMsg.ID,
-			Message:  text,
-			Entities: entities,
-		})
+		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, fmt.Sprintf("❌ <b>Error:</b> %s", err.Error()))
 		return nil
 	}
 
-	text, entities := utils.ParseHTML(i18n.Localize("PMPermitUnblocked", nil, nil))
-	_, err = ctx.EditMessage(uChat.GetID(), &tg.MessagesEditMessageRequest{
-		ID:       uMsg.ID,
-		Message:  text,
-		Entities: entities,
-	})
+	_, err = utils.EditMessageHTML(ctx, uChat.GetID(), uMsg.ID, i18n.Localize("PMPermitUnblocked", nil, nil))
 	return err
 }

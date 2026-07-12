@@ -31,7 +31,6 @@ func pmpermitMessageHook(ctx *ext.Context, update *ext.Update) error {
 
 	ctxBg := ctx
 
-	// If it is an outgoing message (sent by us), auto-approve the user!
 	if msg.Out {
 		prefixVal, err := dbClient.Redis.Get(ctxBg, "prefix").Result()
 		if err == nil && strings.HasPrefix(msg.Text, prefixVal) {
@@ -43,26 +42,21 @@ func pmpermitMessageHook(ctx *ext.Context, update *ext.Update) error {
 		return nil
 	}
 
-	// For incoming messages:
-	// 1. Check if pmpermit is enabled
 	enabled, err := dbClient.Redis.Get(ctxBg, "userbot:pmpermit:enabled").Result()
 	if err == nil && enabled == "false" {
 		return nil
 	}
 
-	// 2. Check if user is approved
 	isApproved, err := dbClient.Redis.SIsMember(ctxBg, "userbot:pmpermit:approved", sender.ID).Result()
 	if err == nil && isApproved {
 		return nil
 	}
 
-	// 3. Ignore commands
 	prefixVal, err := dbClient.Redis.Get(ctxBg, "prefix").Result()
 	if err == nil && strings.HasPrefix(msg.Text, prefixVal) {
 		return nil
 	}
 
-	// 4. Increment warns
 	warnsKey := fmt.Sprintf("userbot:pmpermit:warns:%d", sender.ID)
 	warns, err := dbClient.Redis.Incr(ctxBg, warnsKey).Result()
 	if err != nil {
