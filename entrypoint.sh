@@ -1,8 +1,14 @@
 #!/bin/sh
 while true; do
-  echo "========== [BUILDING USERBOT] =========="
-  CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/userbot main.go
-  if [ $? -eq 0 ]; then
+  if [ "$SKIP_BUILD" != "1" ]; then
+    echo "========== [BUILDING USERBOT] =========="
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/userbot main.go
+    BUILD_STATUS=$?
+  else
+    BUILD_STATUS=0
+  fi
+
+  if [ $BUILD_STATUS -eq 0 ]; then
     echo "========== [STARTING USERBOT] =========="
     /app/userbot
     EXIT_CODE=$?
