@@ -28,9 +28,7 @@ services:
       - GOMODCACHE=/go-mod-cache
       - CGO_ENABLED=0
     volumes:
-      # Mount folder workspace untuk sinkronisasi kode update dan persistensi sesi
       - .:/app
-      # Volume untuk cache Go agar kompilasi berikutnya cepat
       - go_cache:/go-cache
       - go_mod_cache:/go-mod-cache
     networks:
