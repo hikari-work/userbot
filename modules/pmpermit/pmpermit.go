@@ -114,7 +114,7 @@ func pmpermitToggleHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 
-	cmd := strings.ToLower(args[0])
+	cmd := strings.ToLower(args[1])
 	if cmd == "on" || cmd == "enable" || cmd == "true" {
 		err := dbClient.Redis.Set(ctxBg, "userbot:pmpermit:enabled", "true", 0).Err()
 		if err != nil {
