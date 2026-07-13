@@ -1,0 +1,38 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: userbot_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass "${REDIS_PASS:-yourdefaultpassword}" --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - userbot_net
+
+  userbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: userbot_app
+    restart: always
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    environment:
+      - REDIS_URI=redis:6379
+      - REDIS_PASS=${REDIS_PASS:-yourdefaultpassword}
+    volumes:
+      # Mount folder workspace untuk sinkronisasi kode update dan persistensi sesi
+      - .:/app
+    networks:
+      - userbot_net
+
+volumes:
+  redis_data:
+
+networks:
+  userbot_net:
+    driver: bridge
