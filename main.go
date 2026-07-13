@@ -21,7 +21,9 @@ import (
 	dbClient "github.com/hikari-work/userbot/connection"
 	_ "github.com/hikari-work/userbot/modules"
 	"github.com/hikari-work/userbot/modules/manager"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"golang.org/x/time/rate"
 )
 
@@ -31,7 +33,11 @@ func init() {
 
 func main() {
 
-	logger, _ := zap.NewProduction()
+	cfg := zap.NewProductionConfig()
+	cfg.EncoderConfig.TimeKey = "time"
+	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
+	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	logger, _ := cfg.Build()
 	rateLimiter := ratelimit.New(rate.Every(time.Millisecond*100), 30)
 	newConfig := config.NewConfig()
 	var sessionConstructor sessionMaker.SessionConstructor
@@ -67,7 +73,12 @@ func main() {
 		logger.Fatal("Error Connecting Redis: " + err.Error())
 	}
 	dbClient.Redis = conn
-	defer conn.Close()
+	defer func(conn *redis.Client) {
+		err := conn.Close()
+		if err != nil {
+
+		}
+	}(conn)
 
 	ctxBg := context.Background()
 	exists, err := dbClient.Redis.Exists(ctxBg, "prefix").Result()
@@ -94,7 +105,10 @@ func main() {
 
 	initHandlers(client)
 	go syncDialogs(context.Background(), client)
-	client.Idle()
+	err = client.Idle()
+	if err != nil {
+		return
+	}
 }
 
 func initHandlers(client *gotgproto.Client) {

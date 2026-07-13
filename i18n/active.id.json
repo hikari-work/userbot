@@ -589,6 +589,39 @@
   },
   "PMPermitUsage": {
     "other": "ℹ️ <b>Penggunaan:</b> <code>.pmpermit [on/off]</code>"
+  },
+  "SpamHelpText": {
+    "other": "<b>Modul Spam</b>\n\n• <code>.spam &lt;jumlah&gt; &lt;teks&gt;</code> - Kirim pesan berturut-turut.\n• <code>.spam &lt;jumlah&gt;</code> (reply ke pesan) - Spam pesan yang dibalas.\n• <code>.delayspam &lt;delay&gt; &lt;jumlah&gt; &lt;teks&gt;</code> - Kirim pesan berturut-turut dengan delay (detik).\n• <code>.delayspam &lt;delay&gt; &lt;jumlah&gt;</code> (reply ke pesan) - Spam pesan yang dibalas dengan delay (detik).\n• <code>.wspam</code> (reply ke pesan) - Kirim teks dari pesan yang dibalas per karakter.\n• <code>.sspam &lt;jumlah&gt;</code> (reply ke stiker) - Spam stiker yang dibalas.\n\n<i>Catatan: Gunakan alias <code>.dspam</code> untuk delayspam.</i>"
+  },
+  "SpamHelpError": {
+    "other": "Format salah. Gunakan <code>.spam &lt;jumlah&gt; &lt;teks&gt;</code> atau reply ke pesan dengan <code>.spam &lt;jumlah&gt;</code>"
+  },
+  "SpamInvalidCount": {
+    "other": "Jumlah spam harus berupa angka positif."
+  },
+  "SpamMissingText": {
+    "other": "Harap masukkan teks yang ingin di-spam atau balas ke suatu pesan."
+  },
+  "DelaySpamHelpError": {
+    "other": "Format salah. Gunakan <code>.delayspam &lt;delay_detik&gt; &lt;jumlah&gt; &lt;teks&gt;</code> atau reply dengan <code>.delayspam &lt;delay_detik&gt; &lt;jumlah&gt;</code>"
+  },
+  "DelaySpamInvalidDelay": {
+    "other": "Delay harus berupa angka minimal 0.1 detik."
+  },
+  "WSpamReplyRequired": {
+    "other": "Gunakan wspam dengan membalas (reply) ke suatu pesan teks."
+  },
+  "WSpamNoText": {
+    "other": "Pesan yang dibalas tidak memiliki teks."
+  },
+  "SSpamHelpError": {
+    "other": "Format salah. Reply ke stiker dengan <code>.sspam &lt;jumlah&gt;</code>"
+  },
+  "SSpamReplyRequired": {
+    "other": "Gunakan sspam dengan membalas (reply) ke stiker."
+  },
+  "SSpamNotSticker": {
+    "other": "Pesan yang dibalas bukan stiker."
   }
 }
 

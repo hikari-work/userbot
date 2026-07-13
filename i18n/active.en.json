@@ -589,6 +589,39 @@
   },
   "PMPermitUsage": {
     "other": "ℹ️ <b>Usage:</b> <code>.pmpermit [on/off]</code>"
+  },
+  "SpamHelpText": {
+    "other": "<b>Spam Module</b>\n\n• <code>.spam &lt;amount&gt; &lt;text&gt;</code> - Send message consecutively.\n• <code>.spam &lt;amount&gt;</code> (reply to message) - Spam the replied message.\n• <code>.delayspam &lt;delay&gt; &lt;amount&gt; &lt;text&gt;</code> - Send message consecutively with delay (seconds).\n• <code>.delayspam &lt;delay&gt; &lt;amount&gt;</code> (reply to message) - Spam the replied message with delay (seconds).\n• <code>.wspam</code> (reply to message) - Send text of replied message character-by-character.\n• <code>.sspam &lt;amount&gt;</code> (reply to sticker) - Spam the replied sticker.\n\n<i>Note: Use alias <code>.dspam</code> for delayspam.</i>"
+  },
+  "SpamHelpError": {
+    "other": "Invalid format. Use <code>.spam &lt;amount&gt; &lt;text&gt;</code> or reply to a message with <code>.spam &lt;amount&gt;</code>"
+  },
+  "SpamInvalidCount": {
+    "other": "Spam amount must be a positive number."
+  },
+  "SpamMissingText": {
+    "other": "Please provide text to spam or reply to a message."
+  },
+  "DelaySpamHelpError": {
+    "other": "Invalid format. Use <code>.delayspam &lt;delay_seconds&gt; &lt;amount&gt; &lt;text&gt;</code> or reply with <code>.delayspam &lt;delay_seconds&gt; &lt;amount&gt;</code>"
+  },
+  "DelaySpamInvalidDelay": {
+    "other": "Delay must be a number of at least 0.1 seconds."
+  },
+  "WSpamReplyRequired": {
+    "other": "Use wspam by replying to a text message."
+  },
+  "WSpamNoText": {
+    "other": "The replied message does not contain text."
+  },
+  "SSpamHelpError": {
+    "other": "Invalid format. Reply to a sticker with <code>.sspam &lt;amount&gt;</code>"
+  },
+  "SSpamReplyRequired": {
+    "other": "Use sspam by replying to a sticker."
+  },
+  "SSpamNotSticker": {
+    "other": "The replied message is not a sticker."
   }
 }
 
