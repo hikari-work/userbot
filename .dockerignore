@@ -1,0 +1,24 @@
+# Ignore Go binaries
+userbot
+userbot_test
+/tmp/
+
+# Ignore git repository and config (accessible at runtime via volume mount)
+.git
+.github
+
+# Ignore session databases (accessible at runtime via volume mount)
+user_session
+bot_session
+*.db
+
+# Ignore local config and env files
+.env
+.env.sample
+.idea/
+.vscode/
+
+# Ignore temp folders and downloads
+downloads/
+scratch/
+node_modules/
