@@ -1,7 +1,7 @@
 #!/bin/sh
 while true; do
   echo "========== [BUILDING USERBOT] =========="
-  go build -o /app/userbot main.go
+  CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/userbot main.go
   if [ $? -eq 0 ]; then
     echo "========== [STARTING USERBOT] =========="
     /app/userbot

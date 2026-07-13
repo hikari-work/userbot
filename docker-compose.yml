@@ -24,14 +24,22 @@ services:
     environment:
       - REDIS_URI=redis:6379
       - REDIS_PASS=${REDIS_PASS:-yourdefaultpassword}
+      - GOCACHE=/go-cache
+      - GOMODCACHE=/go-mod-cache
+      - CGO_ENABLED=0
     volumes:
       # Mount folder workspace untuk sinkronisasi kode update dan persistensi sesi
       - .:/app
+      # Volume untuk cache Go agar kompilasi berikutnya cepat
+      - go_cache:/go-cache
+      - go_mod_cache:/go-mod-cache
     networks:
       - userbot_net
 
 volumes:
   redis_data:
+  go_cache:
+  go_mod_cache:
 
 networks:
   userbot_net:
