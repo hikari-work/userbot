@@ -18,6 +18,12 @@ A powerful Telegram userbot written in Go using [gotd](https://github.com/gotd/t
    ```
    *This will pull the precompiled lightweight image from GitHub Container Registry (GHCR), spin up Redis, and run the userbot. Session files will be persisted in `./sessions` and downloads in `./downloads`.*
 
+3. **Update the Bot**
+   ```bash
+   docker compose pull
+   docker compose up -d
+   ```
+
 ### Method 2: Local Manual Build
 
 1. **Configure Environment**
