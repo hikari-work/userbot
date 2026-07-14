@@ -10,6 +10,7 @@ userbot_test
 # Ignore session databases (accessible at runtime via volume mount)
 user_session
 bot_session
+sessions/
 *.db
 
 # Ignore local config and env files

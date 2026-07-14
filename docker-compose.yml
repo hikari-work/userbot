@@ -10,9 +10,14 @@ services:
       - userbot_net
 
   userbot:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Pull pre-built image from GitHub Container Registry
+    image: ghcr.io/hikari-work/userbot:latest
+    
+    # Or build locally if you want to make local modifications:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    
     container_name: userbot_app
     restart: always
     depends_on:
@@ -22,20 +27,16 @@ services:
     environment:
       - REDIS_URI=redis:6379
       - REDIS_PASS=${REDIS_PASS:-yourdefaultpassword}
-      - GOCACHE=/go-cache
-      - GOMODCACHE=/go-mod-cache
-      - CGO_ENABLED=0
     volumes:
-      - .:/app
-      - go_cache:/go-cache
-      - go_mod_cache:/go-mod-cache
+      # Persist SQLite sessions and other data files
+      - ./sessions:/app/sessions
+      # Persist downloads
+      - ./downloads:/app/downloads
     networks:
       - userbot_net
 
 volumes:
   redis_data:
-  go_cache:
-  go_mod_cache:
 
 networks:
   userbot_net:

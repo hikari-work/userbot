@@ -1,32 +1,42 @@
-FROM golang:1.26-alpine
+# Stage 1: Build the userbot binary
+FROM golang:1.26-alpine AS builder
 
-# Install basic system packages
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache git build-base
+
+# Copy go.mod and go.sum and download modules
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the source code
+COPY . .
+
+# Run code generators and compile
+RUN go generate ./...
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/userbot main.go
+
+# Stage 2: Final lightweight runtime image
+FROM alpine:latest
+
+# Install runtime packages
 RUN apk add --no-cache \
     git \
     tzdata \
     ffmpeg \
     python3 \
     curl \
-    ca-certificates \
-    build-base
+    ca-certificates
 
-# Download the latest yt-dlp binary
+# Install the latest yt-dlp binary
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
     chmod a+rx /usr/local/bin/yt-dlp
 
-# Set working directory
 WORKDIR /app
 
-# Copy go.mod and go.sum first to leverage Docker caching
-COPY go.mod go.sum ./
-RUN go mod download
+# Copy binary from builder
+COPY --from=builder /app/userbot /app/userbot
 
-# Copy the rest of the codebase
-COPY . .
-
-# Copy the runner script supporting auto-rebuild loop
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Run entrypoint script
-ENTRYPOINT ["/entrypoint.sh"]
+# Run userbot
+ENTRYPOINT ["/app/userbot"]

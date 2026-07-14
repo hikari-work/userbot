@@ -52,7 +52,15 @@ func main() {
 		sessionConstructor = sessionMaker.GramjsSession(newConfig.GramjsSession)
 	} else {
 		slog.Info("Using SQL session database")
-		sessionConstructor = sessionMaker.SqlSession(sqlite.Open("user_session"))
+		_ = os.MkdirAll("sessions", 0755)
+		if _, err := os.Stat("user_session"); err == nil {
+			slog.Info("Migrating user_session to sessions/user_session")
+			_ = os.Rename("user_session", "sessions/user_session")
+		}
+		if _, err := os.Stat("user_session-journal"); err == nil {
+			_ = os.Rename("user_session-journal", "sessions/user_session-journal")
+		}
+		sessionConstructor = sessionMaker.SqlSession(sqlite.Open("sessions/user_session"))
 	}
 
 	client, err := gotgproto.NewClient(

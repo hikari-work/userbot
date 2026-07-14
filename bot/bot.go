@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"log/slog"
+	"os"
 
 	"github.com/celestix/gotgproto"
 	"github.com/celestix/gotgproto/sessionMaker"
@@ -53,9 +54,18 @@ func (b *Client) Run(ctx context.Context) error {
 		return nil
 	})
 
+	_ = os.MkdirAll("sessions", 0755)
+	if _, err := os.Stat("bot_session"); err == nil {
+		slog.Info("Migrating bot_session to sessions/bot_session")
+		_ = os.Rename("bot_session", "sessions/bot_session")
+	}
+	if _, err := os.Stat("bot_session-journal"); err == nil {
+		_ = os.Rename("bot_session-journal", "sessions/bot_session-journal")
+	}
+
 	_, botSessionStorage, err := sessionMaker.NewSessionStorage(
 		context.Background(),
-		sessionMaker.SqlSession(sqlite.Open("bot_session")),
+		sessionMaker.SqlSession(sqlite.Open("sessions/bot_session")),
 		false,
 	)
 	if err != nil {

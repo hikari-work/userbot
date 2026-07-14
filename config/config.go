@@ -21,11 +21,8 @@ type Config struct {
 }
 
 func NewConfig() *Config {
-	err := godotenv.Load()
-	if err != nil {
-		slog.Error("Env Not Found, Please Create .env file from .env.sample", "error", err)
-		os.Exit(1)
-	}
+	// Attempt to load .env file, but do not exit if it's missing (e.g. inside Docker environments)
+	_ = godotenv.Load()
 	apiId, err := strconv.Atoi(os.Getenv("API_ID"))
 	if err != nil {
 		slog.Error("Not Acceptable API ID", "error", err)

@@ -13,6 +13,7 @@ config.yml
 # Session data (Telegram SQLite session file)
 user_session
 user_session/
+sessions/
 
 # Downloads
 downloads/

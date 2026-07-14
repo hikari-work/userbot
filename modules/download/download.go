@@ -45,7 +45,7 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 			_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("❌ <b>Error:</b> %s", html.EscapeString(err.Error())))
 			return err
 		}
-		localize := i18n.Localize("MediaAutoDLDeact", nil, nil)
+		localize := i18n.Localize("MediaAutoDLActv", nil, nil)
 		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, localize)
 		return nil
 	}
@@ -55,7 +55,7 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 			_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, fmt.Sprintf("❌ <b>Error:</b> %s", html.EscapeString(err.Error())))
 			return err
 		}
-		localize := i18n.Localize("MediaAutoDLActv", nil, nil)
+		localize := i18n.Localize("MediaAutoDLDeact", nil, nil)
 		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, localize)
 		return nil
 	}
