@@ -13,11 +13,6 @@ services:
     # Pull pre-built image from GitHub Container Registry
     image: ghcr.io/hikari-work/userbot:latest
     
-    # Or build locally if you want to make local modifications:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    
     container_name: userbot_app
     restart: always
     depends_on:
