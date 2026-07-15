@@ -124,11 +124,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 
 	meta := determineFileInfo(msg)
 
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), message.ID, i18n.Localize("DownloadDownloading", map[string]interface{}{
-		"Type": meta.MediaTypeStr,
-		"Name": meta.FileName,
-	}, nil))
-
 	outputPath, thumbPath, cleanup, err := downloadMediaHelper(ctx, msg.Media, meta)
 	if err != nil {
 		if isReply {
