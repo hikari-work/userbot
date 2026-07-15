@@ -28,6 +28,8 @@ services:
       - ./sessions:/app/sessions
       # Persist downloads
       - ./downloads:/app/downloads
+      # YouTube cookies for age-restricted/auth-required videos
+      - ./cookies.txt:/app/cookies.txt:ro
     networks:
       - userbot_net
 

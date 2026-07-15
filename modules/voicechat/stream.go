@@ -107,21 +107,99 @@ func streamAudio(pCtx context.Context, state *State, youtubeURL string) {
 		return
 	}
 
+	// Decode OGG pages in a separate goroutine to decouple network I/O from playback timing.
+	// The channel buffer absorbs network jitter so the playback loop runs at a steady pace.
+	type opusPacket struct {
+		data     []byte
+		duration time.Duration
+	}
+	packetCh := make(chan opusPacket, 200)
+
+	go func() {
+		defer close(packetCh)
+		var pending []byte
+		for {
+			select {
+			case <-pCtx.Done():
+				return
+			default:
+			}
+
+			packets, _, err := oggReader.ParseNextPageSegments()
+			if err != nil {
+				return
+			}
+
+			if len(packets) == 0 {
+				continue
+			}
+
+			if pending != nil {
+				packets[0] = append(pending, packets[0]...)
+				pending = nil
+			}
+
+			if oggReader.LastPageLastSegmentSize() == 255 {
+				pending = packets[len(packets)-1]
+				packets = packets[:len(packets)-1]
+			}
+
+			for _, pkt := range packets {
+				if len(pkt) == 0 {
+					continue
+				}
+				if bytes.HasPrefix(pkt, []byte("OpusHead")) || bytes.HasPrefix(pkt, []byte("OpusTags")) {
+					continue
+				}
+				if len(pkt) < 20 {
+					continue
+				}
+
+				samples := opusPacketSamples(pkt)
+				if samples == 0 {
+					samples = 960
+				}
+				sampleDuration := time.Duration(samples) * time.Second / 48000
+
+				select {
+				case packetCh <- opusPacket{data: pkt, duration: sampleDuration}:
+				case <-pCtx.Done():
+					return
+				}
+			}
+		}
+	}()
+
+	// Pre-buffer: wait until channel has some packets before starting playback
+	// to avoid initial stutter from network latency.
+	prebufferTimer := time.NewTimer(300 * time.Millisecond)
+	select {
+	case <-prebufferTimer.C:
+	case <-pCtx.Done():
+		prebufferTimer.Stop()
+		return
+	}
+	prebufferTimer.Stop()
+
 	var nextTime time.Time
-	var pending []byte
-	for {
+	for pkt := range packetCh {
+		// Check context cancellation
 		select {
 		case <-pCtx.Done():
 			return
 		default:
 		}
 
+		// Handle pause
 		state.mu.Lock()
-		if state.isPaused {
+		for state.isPaused {
 			state.mu.Unlock()
-			time.Sleep(100 * time.Millisecond)
-			nextTime = time.Now()
-			continue
+			select {
+			case <-time.After(100 * time.Millisecond):
+			case <-pCtx.Done():
+				return
+			}
+			state.mu.Lock()
 		}
 		audioTrack := state.audioTrack
 		state.mu.Unlock()
@@ -130,53 +208,18 @@ func streamAudio(pCtx context.Context, state *State, youtubeURL string) {
 			return
 		}
 
-		packets, _, err := oggReader.ParseNextPageSegments()
+		err = audioTrack.WriteSample(media.Sample{Data: pkt.data, Duration: pkt.duration})
 		if err != nil {
 			return
 		}
 
-		if len(packets) == 0 {
-			continue
-		}
-
-		if pending != nil {
-			packets[0] = append(pending, packets[0]...)
-			pending = nil
-		}
-
-		if oggReader.LastPageLastSegmentSize() == 255 {
-			pending = packets[len(packets)-1]
-			packets = packets[:len(packets)-1]
-		}
-
-		for _, pkt := range packets {
-			if len(pkt) == 0 {
-				continue
-			}
-			if bytes.HasPrefix(pkt, []byte("OpusHead")) || bytes.HasPrefix(pkt, []byte("OpusTags")) {
-				continue
-			}
-
-			if len(pkt) < 20 {
-				continue
-			}
-
-			samples := opusPacketSamples(pkt)
-			if samples == 0 {
-				samples = 960
-			}
-			sampleDuration := time.Duration(samples) * time.Second / 48000
-
-			err = audioTrack.WriteSample(media.Sample{Data: pkt, Duration: sampleDuration})
-			if err != nil {
-				return
-			}
-
-			if nextTime.IsZero() {
-				nextTime = time.Now()
-			} else {
-				nextTime = nextTime.Add(sampleDuration)
-				time.Sleep(time.Until(nextTime))
+		if nextTime.IsZero() {
+			nextTime = time.Now()
+		} else {
+			nextTime = nextTime.Add(pkt.duration)
+			sleepDur := time.Until(nextTime)
+			if sleepDur > 0 {
+				time.Sleep(sleepDur)
 			}
 		}
 	}
