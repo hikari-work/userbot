@@ -29,8 +29,8 @@ func downloadHelp() string {
 	return "Format \n<code>.dl &lt;link_pesan&gt;</code>\n<code>Contoh : .dl https://t.me/c/123456789/123</code>"
 }
 
-
 func downloadHandler(ctx *ext.Context, update *ext.Update) error {
+	slog.Info("Context is", ctx.Context)
 	args := update.Args()
 	if len(args) < 2 {
 		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadUsage", nil, nil))
@@ -136,4 +136,3 @@ func autoForward(ctx *ext.Context, update *ext.Update) error {
 
 	return nil
 }
-

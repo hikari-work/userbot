@@ -190,8 +190,15 @@ func getPlaylistItems(youtubeURL string) ([]PlaylistItem, error) {
 	if strings.Contains(youtubeURL, "youtube") || strings.Contains(youtubeURL, "youtu.be") || len(youtubeURL) == 11 {
 		fallbackTitle = "YouTube Audio"
 	}
+	_, errRead := os.ReadFile("cookies.txt")
+	var cmd *exec.Cmd
 
-	cmd := exec.Command("yt-dlp", "--flat-playlist", "--print", "url", "--print", "title", "--no-warnings", youtubeURL)
+	if errRead != nil {
+		cmd = exec.Command("yt-dlp", "--flat-playlist", "--print", "url", "--print", "title", "--no-warnings", youtubeURL)
+	} else {
+		cmd = exec.Command("yt-dlp", "--flat-playlist", "--print", "url", "--print", "title", "--no-warnings", "--cookies", "cookies.txt", youtubeURL)
+	}
+
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
 	err := cmd.Run()
