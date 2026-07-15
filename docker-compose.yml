@@ -12,6 +12,7 @@ services:
   userbot:
     # Pull pre-built image from GitHub Container Registry
     image: ghcr.io/hikari-work/userbot:latest
+    pull_policy: always
     
     container_name: userbot_app
     restart: always

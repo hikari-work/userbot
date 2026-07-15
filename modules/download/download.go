@@ -30,7 +30,6 @@ func downloadHelp() string {
 }
 
 func downloadHandler(ctx *ext.Context, update *ext.Update) error {
-	slog.Info("Context is", ctx.Context)
 	args := update.Args()
 	if len(args) < 2 {
 		_, _ = utils.EditMessageHTML(ctx, update.EffectiveChat().GetID(), update.EffectiveMessage.ID, i18n.Localize("DownloadUsage", nil, nil))
