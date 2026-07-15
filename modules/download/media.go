@@ -270,7 +270,11 @@ func downloadMediaHelper(ctx *ext.Context, media tg.MessageMediaClass, meta Medi
 	}
 
 	slog.Info("status: Starting DownloadMedia...", "outputPath", outputPath)
-	_, err = ctx.DownloadMedia(media, ext.DownloadOutputPath(outputPath), nil)
+	_, err = ctx.DownloadMedia(media, ext.DownloadOutputPath(outputPath), &ext.DownloadMediaOpts{
+		Threads:  8,
+		Verify:   nil,
+		PartSize: 0,
+	})
 	if err != nil {
 		slog.Error("status: Failed DownloadMedia", "error", err)
 		for _, clean := range cleanups {
