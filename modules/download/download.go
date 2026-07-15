@@ -53,7 +53,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 	bgCtx.Context = context.Background()
 
 	go func() {
-		// If it's a reply, delete the trigger message from the current chat at the end of execution
 		if isReply {
 			defer func() {
 				_ = bgCtx.DeleteMessages(uChat.GetID(), []int{message.ID})
@@ -71,7 +70,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 		var err error
 
 		if isReply {
-			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadGettingData", nil, nil))
 			msg, err = getMessage(&bgCtx, uChat.GetID(), replyHeader.ReplyToMsgID)
 			if err != nil {
 				peer, pErr := bgCtx.ResolveInputPeerById(bgCtx.Self.ID)
@@ -108,8 +106,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 				return
 			}
 
-			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
-
 			peer, isPrivate, msgID, err := parseLink(link)
 			if err != nil {
 				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
@@ -122,8 +118,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 				return
 			}
 
-			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadGettingData", nil, nil))
-
 			msg, err = getMessage(&bgCtx, chatID, msgID)
 			if err != nil {
 				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil))
@@ -132,11 +126,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 		}
 
 		meta := determineFileInfo(msg)
-
-		_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadDownloading", map[string]interface{}{
-			"Type": meta.MediaTypeStr,
-			"Name": meta.FileName,
-		}, nil))
 
 		outputPath, thumbPath, cleanup, err := downloadMediaHelper(&bgCtx, msg.Media, meta)
 		if err != nil {
@@ -156,10 +145,7 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 		}
 		defer cleanup()
 
-		_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadUploading", map[string]interface{}{"Name": meta.FileName}, nil))
-
 		if isReply {
-			// Pass triggerMsgID = 0 since we delete it ourselves via defer, and targetChatID is Saved Messages.
 			err = uploadAndSendMedia(&bgCtx, targetChatID, 0, outputPath, thumbPath, meta)
 			if err != nil {
 				peer, pErr := bgCtx.ResolveInputPeerById(bgCtx.Self.ID)
