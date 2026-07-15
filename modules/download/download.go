@@ -54,9 +54,7 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 
 	go func() {
 		if isReply {
-			defer func() {
-				_ = bgCtx.DeleteMessages(uChat.GetID(), []int{message.ID})
-			}()
+			_ = bgCtx.DeleteMessages(uChat.GetID(), []int{message.ID})
 		}
 
 		var targetChatID int64
