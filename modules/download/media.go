@@ -133,7 +133,9 @@ func uploadAndSendMedia(ctx *ext.Context, chatID int64, triggerMsgID int, output
 	uploadedFile, err := uploaderHelper.FromPath(ctx, outputPath)
 	if err != nil {
 		slog.Error("status: failed to upload file", "error", err)
-		_, _ = utils.EditMessageHTML(ctx, chatID, triggerMsgID, i18n.Localize("DownloadFailedUpload", map[string]interface{}{"Error": err.Error()}, nil))
+		if triggerMsgID > 0 {
+			_, _ = utils.EditMessageHTML(ctx, chatID, triggerMsgID, i18n.Localize("DownloadFailedUpload", map[string]interface{}{"Error": err.Error()}, nil))
+		}
 		return err
 	}
 	slog.Info("status: upload file success")
