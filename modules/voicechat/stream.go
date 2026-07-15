@@ -54,31 +54,37 @@ func streamAudio(pCtx context.Context, state *State, youtubeURL string) {
 		return
 	}
 
-	// First, get the direct audio URL using yt-dlp --get-url.
-	// Using "-o -" fails on DASH/adaptive streams where yt-dlp outputs "NA" instead of audio data.
-	getURLCmd := exec.CommandContext(pCtx, "yt-dlp",
+	// Use yt-dlp to pipe audio data directly to ffmpeg.
+	// Fall back to --get-url approach if direct pipe fails.
+	_, errCookies := os.ReadFile("cookies.txt")
+	ytArgs := []string{
 		"-f", "bestaudio",
 		"--no-playlist",
 		"--no-warnings",
-		"--get-url",
-		youtubeURL,
-	)
-	getURLCmd.Stderr = os.Stderr
-	urlOutput, err := getURLCmd.Output()
+		"-o", "-",
+	}
+	if errCookies == nil {
+		ytArgs = append(ytArgs, "--cookies", "cookies.txt")
+	}
+	ytArgs = append(ytArgs, youtubeURL)
+
+	ytdlpCmd := exec.CommandContext(pCtx, "yt-dlp", ytArgs...)
+	ytdlpCmd.Stderr = os.Stderr
+
+	ytdlpOut, err := ytdlpCmd.StdoutPipe()
 	if err != nil {
 		return
 	}
-	directURL := strings.TrimSpace(string(urlOutput))
-	if directURL == "" || directURL == "NA" {
+	if err := ytdlpCmd.Start(); err != nil {
 		return
 	}
+	defer func() {
+		_ = ytdlpCmd.Process.Kill()
+	}()
 
 	ffmpegCmd := exec.CommandContext(pCtx, "ffmpeg",
 		"-loglevel", "error",
-		"-reconnect", "1",
-		"-reconnect_streamed", "1",
-		"-reconnect_delay_max", "5",
-		"-i", directURL,
+		"-i", "pipe:0",
 		"-map", "0:a",
 		"-c:a", "libopus",
 		"-b:a", "64k",
@@ -89,6 +95,7 @@ func streamAudio(pCtx context.Context, state *State, youtubeURL string) {
 		"-page_duration", "20000",
 		"pipe:1",
 	)
+	ffmpegCmd.Stdin = ytdlpOut
 	ffmpegCmd.Stderr = os.Stderr
 
 	ffmpegOut, err := ffmpegCmd.StdoutPipe()
