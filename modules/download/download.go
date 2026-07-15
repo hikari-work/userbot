@@ -65,7 +65,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 	var err error
 
 	if isReply {
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), message.ID, i18n.Localize("DownloadGettingData", nil, nil))
 		msg, err = getMessage(ctx, uChat.GetID(), replyHeader.ReplyToMsgID)
 		if err != nil {
 			peer, pErr := ctx.ResolveInputPeerById(ctx.Self.ID)
@@ -149,8 +148,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 	defer cleanup()
-
-	_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), message.ID, i18n.Localize("DownloadUploading", map[string]interface{}{"Name": meta.FileName}, nil))
 
 	if isReply {
 		err = uploadAndSendMedia(ctx, targetChatID, 0, outputPath, thumbPath, meta)
