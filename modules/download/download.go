@@ -101,8 +101,6 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 			return nil
 		}
 
-		_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), message.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
-
 		peer, isPrivate, msgID, err := parseLink(link)
 		if err != nil {
 			_, _ = utils.EditMessageHTML(ctx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
