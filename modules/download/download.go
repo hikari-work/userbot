@@ -105,11 +105,11 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 			}
 
 			peer, isPrivate, msgID, err := parseLink(link)
-			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadAnalyzing", map[string]interface{}{"Error": err.Error()}, nil))
 			if err != nil {
 				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
 				return
 			}
+			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
 
 			chatID, err := resolvePeer(&bgCtx, peer, isPrivate)
 			if err != nil {
