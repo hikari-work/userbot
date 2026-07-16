@@ -133,13 +133,15 @@ func initHandlers(client *gotgproto.Client) {
 	dp.AddHandler(handlers.NewMessage(
 		func(m *types.Message) bool { return true },
 		func(ctx *ext.Context, update *ext.Update) error {
-			for _, mod := range manager.Registry {
-				if mod.OnMessage != nil {
-					if err := mod.OnMessage(ctx, update); err != nil {
-
+			go func() {
+				for _, mod := range manager.Registry {
+					if mod.OnMessage != nil {
+						if err := mod.OnMessage(ctx, update); err != nil {
+							slog.Error("OnMessage handler error", "module", mod.Name, "error", err)
+						}
 					}
 				}
-			}
+			}()
 			return nil
 		},
 	))
@@ -156,7 +158,12 @@ func initHandlers(client *gotgproto.Client) {
 				if mod.OnlyOut && (update.EffectiveMessage == nil || !update.EffectiveMessage.Out) {
 					return nil
 				}
-				return mod.Handler(ctx, update)
+				go func() {
+					if err := mod.Handler(ctx, update); err != nil {
+						slog.Error("Command handler error", "module", mod.Name, "error", err)
+					}
+				}()
+				return nil
 			})
 			cmdHandler.Prefix = prefixRunes
 

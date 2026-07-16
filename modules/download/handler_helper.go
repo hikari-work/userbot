@@ -5,8 +5,6 @@ import (
 	"html"
 	"log/slog"
 	"strings"
-	"sync"
-
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 	dbClient "github.com/hikari-work/userbot/connection"
@@ -39,35 +37,33 @@ func toggleAutoDownload(ctx *ext.Context, chatID int64, msgID int, action string
 	return fmt.Errorf("invalid action: %s", action)
 }
 
-// downloadBatch downloads multiple messages in a batch concurrently
+// downloadBatch downloads multiple messages sequentially (download then upload, one at a time)
 func downloadBatch(ctx *ext.Context, triggerChatID int64, triggerMsgID int, sourceChatID int64, startMsgID int, count int, targetChatID int64) {
 	_, _ = utils.EditMessageHTML(ctx, triggerChatID, triggerMsgID,
 		fmt.Sprintf("⏳ <b>Downloading %d messages</b> (ID %d - %d)...", count, startMsgID, startMsgID+count-1))
 
-	var wg sync.WaitGroup
 	for i := 0; i < count; i++ {
-		wg.Add(1)
-		go func(id int) {
-			defer wg.Done()
-			m, err := getMessage(ctx, sourceChatID, id)
-			if err != nil {
-				slog.Error("Batch download: failed to get message", "msgID", id, "error", err)
-				return
-			}
-			meta := determineFileInfo(m)
-			outputPath, thumbPath, cleanup, err := downloadMediaHelper(ctx, m.Media, meta)
-			if err != nil {
-				slog.Error("Batch download: failed to download media", "msgID", id, "error", err)
-				return
-			}
-			defer cleanup()
-			err = uploadAndSendMedia(ctx, targetChatID, 0, outputPath, thumbPath, meta)
-			if err != nil {
-				slog.Error("Batch download: failed to upload media", "msgID", id, "error", err)
-			}
-		}(startMsgID + i)
+		id := startMsgID + i
+		_, _ = utils.EditMessageHTML(ctx, triggerChatID, triggerMsgID,
+			fmt.Sprintf("⏳ <b>Processing %d/%d</b> (ID %d)...", i+1, count, id))
+
+		m, err := getMessage(ctx, sourceChatID, id)
+		if err != nil {
+			slog.Error("Batch download: failed to get message", "msgID", id, "error", err)
+			continue
+		}
+		meta := determineFileInfo(m)
+		outputPath, thumbPath, cleanup, err := downloadMediaHelper(ctx, m.Media, meta)
+		if err != nil {
+			slog.Error("Batch download: failed to download media", "msgID", id, "error", err)
+			continue
+		}
+		err = uploadAndSendMedia(ctx, targetChatID, 0, outputPath, thumbPath, meta)
+		if err != nil {
+			slog.Error("Batch download: failed to upload media", "msgID", id, "error", err)
+		}
+		cleanup()
 	}
-	wg.Wait()
 	_, _ = utils.EditMessageHTML(ctx, triggerChatID, triggerMsgID,
 		fmt.Sprintf("✅ <b>Batch download selesai</b> (%d messages)", count))
 }

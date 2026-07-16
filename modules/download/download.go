@@ -52,78 +52,75 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 	bgCtx := *ctx
 	bgCtx.Context = context.Background()
 
-	go func() {
-		if isReply {
-			_ = bgCtx.DeleteMessages(uChat.GetID(), []int{message.ID})
-		}
+	if isReply {
+		_ = bgCtx.DeleteMessages(uChat.GetID(), []int{message.ID})
+	}
 
-		var targetChatID int64
-		if isReply {
-			targetChatID = bgCtx.Self.ID
-		} else {
-			targetChatID = uChat.GetID()
-		}
+	var targetChatID int64
+	if isReply {
+		targetChatID = bgCtx.Self.ID
+	} else {
+		targetChatID = uChat.GetID()
+	}
 
-		if isReply {
-			msg, err := getMessage(&bgCtx, uChat.GetID(), replyHeader.ReplyToMsgID)
-			if err != nil {
-				peer, pErr := bgCtx.ResolveInputPeerById(bgCtx.Self.ID)
-				if pErr == nil {
-					_, _ = bgCtx.SendMessage(bgCtx.Self.ID, &tg.MessagesSendMessageRequest{
-						Peer:     peer,
-						Message:  i18n.Localize("DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil),
-						RandomID: getRandomID(),
-					})
-				}
-				return
+	if isReply {
+		msg, err := getMessage(&bgCtx, uChat.GetID(), replyHeader.ReplyToMsgID)
+		if err != nil {
+			peer, pErr := bgCtx.ResolveInputPeerById(bgCtx.Self.ID)
+			if pErr == nil {
+				_, _ = bgCtx.SendMessage(bgCtx.Self.ID, &tg.MessagesSendMessageRequest{
+					Peer:     peer,
+					Message:  i18n.Localize("DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil),
+					RandomID: getRandomID(),
+				})
 			}
-			downloadAndSendSingle(&bgCtx, msg, targetChatID, uChat.GetID(), message.ID, true)
-			return
+			return nil
 		}
+		downloadAndSendSingle(&bgCtx, msg, targetChatID, uChat.GetID(), message.ID, true)
+		return nil
+	}
 
-		link := args[1]
-		slog.Info("Starting proses download link", "link", link)
-		if strings.EqualFold(link, "on") || strings.EqualFold(link, "off") {
-			_ = toggleAutoDownload(&bgCtx, uChat.GetID(), message.ID, link)
-			return
+	link := args[1]
+	slog.Info("Starting proses download link", "link", link)
+	if strings.EqualFold(link, "on") || strings.EqualFold(link, "off") {
+		_ = toggleAutoDownload(&bgCtx, uChat.GetID(), message.ID, link)
+		return nil
+	}
+
+	peer, isPrivate, msgID, err := parseLink(link)
+	if err != nil {
+		_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
+		return nil
+	}
+
+	chatID, err := resolvePeer(&bgCtx, peer, isPrivate)
+	if err != nil {
+		_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedResolveChat", map[string]interface{}{"Error": err.Error()}, nil))
+		return nil
+	}
+
+	count := 1
+	if len(args) > 2 {
+		n, err := strconv.Atoi(args[2])
+		if err == nil && n > 1 {
+			count = n
 		}
+	}
 
-		peer, isPrivate, msgID, err := parseLink(link)
-		if err != nil {
-			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
-			return
-		}
+	if count > 1 {
+		downloadBatch(&bgCtx, uChat.GetID(), message.ID, chatID, msgID, count, targetChatID)
+		return nil
+	}
 
-		chatID, err := resolvePeer(&bgCtx, peer, isPrivate)
-		if err != nil {
-			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedResolveChat", map[string]interface{}{"Error": err.Error()}, nil))
-			return
-		}
+	_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
 
-		count := 1
-		if len(args) > 2 {
-			n, err := strconv.Atoi(args[2])
-			if err == nil && n > 1 {
-				count = n
-			}
-		}
+	msg, err := getMessage(&bgCtx, chatID, msgID)
+	if err != nil {
+		_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil))
+		return nil
+	}
 
-		if count > 1 {
-			downloadBatch(&bgCtx, uChat.GetID(), message.ID, chatID, msgID, count, targetChatID)
-			return
-		}
-
-		_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
-
-		msg, err := getMessage(&bgCtx, chatID, msgID)
-		if err != nil {
-			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil))
-			return
-		}
-
-		downloadAndSendSingle(&bgCtx, msg, targetChatID, uChat.GetID(), message.ID, false)
-	}()
-
+	downloadAndSendSingle(&bgCtx, msg, targetChatID, uChat.GetID(), message.ID, false)
 	return nil
 }
 
