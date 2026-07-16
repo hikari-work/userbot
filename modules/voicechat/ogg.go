@@ -184,8 +184,6 @@ func customOggParseExtendedChannelMapping(header *CustomOggHeader, payload []byt
 	return nil
 }
 
-
-
 func customOggGenerateChecksumTable() *[256]uint32 {
 	var table [256]uint32
 	const poly = 0x04c11db7

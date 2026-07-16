@@ -227,4 +227,3 @@ func getFloodHandler(ctx *ext.Context, update *ext.Update) error {
 	})
 	return nil
 }
-

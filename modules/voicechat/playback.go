@@ -107,9 +107,6 @@ func PlayHandler(ctx *ext.Context, update *ext.Update) error {
 	return nil
 }
 
-
-
-
 func SkipHandler(ctx *ext.Context, update *ext.Update) error {
 	uChat := update.EffectiveChat()
 	uMsg := update.EffectiveMessage
@@ -180,4 +177,3 @@ func PlaylistHandler(ctx *ext.Context, update *ext.Update) error {
 	})
 	return err
 }
-

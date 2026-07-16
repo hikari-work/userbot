@@ -3,8 +3,8 @@ package download
 import (
 	"context"
 	"fmt"
-	"html"
 	"log/slog"
+	"strconv"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
@@ -64,11 +64,8 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 			targetChatID = uChat.GetID()
 		}
 
-		var msg *tg.Message
-		var err error
-
 		if isReply {
-			msg, err = getMessage(&bgCtx, uChat.GetID(), replyHeader.ReplyToMsgID)
+			msg, err := getMessage(&bgCtx, uChat.GetID(), replyHeader.ReplyToMsgID)
 			if err != nil {
 				peer, pErr := bgCtx.ResolveInputPeerById(bgCtx.Self.ID)
 				if pErr == nil {
@@ -80,85 +77,51 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 				}
 				return
 			}
-		} else {
-			link := args[1]
-			slog.Info("Starting proses download link", "link", link)
-			if "on" == strings.ToLower(link) {
-				err := dbClient.Redis.Set(&bgCtx, "userbot:autodownload:ttl", "1", 0).Err()
-				if err != nil {
-					_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, fmt.Sprintf("❌ <b>Error:</b> %s", html.EscapeString(err.Error())))
-					return
-				}
-				localize := i18n.Localize("MediaAutoDLActv", nil, nil)
-				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, localize)
-				return
-			}
-			if "off" == strings.ToLower(link) {
-				err := dbClient.Redis.Del(&bgCtx, "userbot:autodownload:ttl").Err()
-				if err != nil {
-					_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, fmt.Sprintf("❌ <b>Error:</b> %s", html.EscapeString(err.Error())))
-					return
-				}
-				localize := i18n.Localize("MediaAutoDLDeact", nil, nil)
-				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, localize)
-				return
-			}
-
-			peer, isPrivate, msgID, err := parseLink(link)
-			if err != nil {
-				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
-				return
-			}
-			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
-
-			chatID, err := resolvePeer(&bgCtx, peer, isPrivate)
-			if err != nil {
-				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedResolveChat", map[string]interface{}{"Error": err.Error()}, nil))
-				return
-			}
-
-			msg, err = getMessage(&bgCtx, chatID, msgID)
-			if err != nil {
-				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil))
-				return
-			}
-		}
-
-		meta := determineFileInfo(msg)
-
-		outputPath, thumbPath, cleanup, err := downloadMediaHelper(&bgCtx, msg.Media, meta)
-		if err != nil {
-			if isReply {
-				peer, pErr := bgCtx.ResolveInputPeerById(bgCtx.Self.ID)
-				if pErr == nil {
-					_, _ = bgCtx.SendMessage(bgCtx.Self.ID, &tg.MessagesSendMessageRequest{
-						Peer:     peer,
-						Message:  i18n.Localize("DownloadFailedDownloadMedia", map[string]interface{}{"Error": err.Error()}, nil),
-						RandomID: getRandomID(),
-					})
-				}
-			} else {
-				_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedDownloadMedia", map[string]interface{}{"Error": err.Error()}, nil))
-			}
+			downloadAndSendSingle(&bgCtx, msg, targetChatID, uChat.GetID(), message.ID, true)
 			return
 		}
-		defer cleanup()
 
-		if isReply {
-			err = uploadAndSendMedia(&bgCtx, targetChatID, 0, outputPath, thumbPath, meta)
-			if err != nil {
-				peer, pErr := bgCtx.ResolveInputPeerById(bgCtx.Self.ID)
-				if pErr == nil {
-					_, _ = bgCtx.SendMessage(bgCtx.Self.ID, &tg.MessagesSendMessageRequest{
-						Peer:     peer,
-						Message:  i18n.Localize("DownloadFailedUpload", map[string]interface{}{"Error": err.Error()}, nil),
-						RandomID: getRandomID(),
-					})
-				}
-			}
-		} else {
-			err = uploadAndSendMedia(&bgCtx, targetChatID, message.ID, outputPath, thumbPath, meta)
+		link := args[1]
+		slog.Info("Starting proses download link", "link", link)
+		if strings.EqualFold(link, "on") || strings.EqualFold(link, "off") {
+			_ = toggleAutoDownload(&bgCtx, uChat.GetID(), message.ID, link)
+			return
 		}
+
+		peer, isPrivate, msgID, err := parseLink(link)
+		if err != nil {
+			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedAnalyze", map[string]interface{}{"Error": err.Error()}, nil))
+			return
+		}
+
+		chatID, err := resolvePeer(&bgCtx, peer, isPrivate)
+		if err != nil {
+			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedResolveChat", map[string]interface{}{"Error": err.Error()}, nil))
+			return
+		}
+
+		count := 1
+		if len(args) > 2 {
+			n, err := strconv.Atoi(args[2])
+			if err == nil && n > 1 {
+				count = n
+			}
+		}
+
+		if count > 1 {
+			downloadBatch(&bgCtx, uChat.GetID(), message.ID, chatID, msgID, count, targetChatID)
+			return
+		}
+
+		_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadAnalyzing", nil, nil))
+
+		msg, err := getMessage(&bgCtx, chatID, msgID)
+		if err != nil {
+			_, _ = utils.EditMessageHTML(&bgCtx, uChat.GetID(), message.ID, i18n.Localize("DownloadFailedGetMsg", map[string]interface{}{"Error": err.Error()}, nil))
+			return
+		}
+
+		downloadAndSendSingle(&bgCtx, msg, targetChatID, uChat.GetID(), message.ID, false)
 	}()
 
 	return nil

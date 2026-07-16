@@ -53,10 +53,10 @@ func updateHandler(ctx *ext.Context, update *ext.Update) error {
 	if _, errGo := exec.LookPath("go"); errGo != nil {
 		_, _ = utils.EditMessageHTML(ctx, chatID, statusMsg.ID,
 			"⚙️ <b>Bot berjalan di dalam Docker (Pre-built)!</b>\n\n"+
-			"Untuk mengupdate bot, silakan jalankan perintah berikut di terminal VPS Anda:\n"+
-			"<code>cd /root/userbot && docker-compose pull && docker-compose up -d</code>\n\n"+
-			"<i>Jika Anda menggunakan build lokal, jalankan:</i>\n"+
-			"<code>cd /root/userbot && git pull && docker-compose up -d --build</code>")
+				"Untuk mengupdate bot, silakan jalankan perintah berikut di terminal VPS Anda:\n"+
+				"<code>cd /root/userbot && docker-compose pull && docker-compose up -d</code>\n\n"+
+				"<i>Jika Anda menggunakan build lokal, jalankan:</i>\n"+
+				"<code>cd /root/userbot && git pull && docker-compose up -d --build</code>")
 		return nil
 	}
 

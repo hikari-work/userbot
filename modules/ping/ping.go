@@ -30,7 +30,7 @@ func pingHandler(ctx *ext.Context, update *ext.Update) error {
 		return err
 	}
 	since := time.Since(start)
-	
+
 	text := i18n.Localize("PongMessage", map[string]interface{}{
 		"Since": fmt.Sprintf("%.2fms", float64(since.Microseconds())/1000.0),
 	}, nil)
