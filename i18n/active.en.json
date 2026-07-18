@@ -282,7 +282,7 @@
     "other": "❌ <b>Please reply to a message to generate a quote sticker.</b>"
   },
   "StatusMessage": {
-    "other": "<b> SERVER &amp; USERBOT STATUS</b>\n--------------------------------------------\n<b> CPU Usage:</b> <code>{{.CPU}}%</code>\n<b> System RAM:</b>{{.RAM}}\n\n<b> Go Runtime Stats:</b>\n  • Goroutines: <code>{{.Goroutines}}</code>\n  • Go Memory Alloc: <code>{{.GoAlloc}}</code> (sys: <code>{{.GoSys}}</code>)\n  • Go Heap Alloc: <code>{{.GoHeapAlloc}}</code> (sys: <code>{{.GoHeapSys}}</code>)\n  • Go Heap Idle: <code>{{.GoHeapIdle}}</code>\n  • Go GC Cycles: <code>{{.GcCycles}}</code>\n--------------------------------------------\n<b>⏰ Bot Uptime:</b> <code>{{.BotUptime}}</code>\n<b>⚙️ Sys Uptime:</b> <code>{{.SysUptime}}</code>"
+    "other": "<b> SERVER &amp; USERBOT STATUS</b>\n--------------------------------------------\n<b> CPU Model:</b> <code>{{.CPUModel}}</code>\n<b> CPU Usage:</b> <code>{{.CPU}}%</code>\n<b> System RAM:</b>{{.RAM}}\n\n<b> Go Runtime Stats:</b>\n  • Goroutines: <code>{{.Goroutines}}</code>\n  • Go Memory Alloc: <code>{{.GoAlloc}}</code> (sys: <code>{{.GoSys}}</code>)\n  • Go Heap Alloc: <code>{{.GoHeapAlloc}}</code> (sys: <code>{{.GoHeapSys}}</code>)\n  • Go Heap Idle: <code>{{.GoHeapIdle}}</code>\n  • Go GC Cycles: <code>{{.GcCycles}}</code>\n--------------------------------------------\n<b>⏰ Bot Uptime:</b> <code>{{.BotUptime}}</code>\n<b>⚙️ Sys Uptime:</b> <code>{{.SysUptime}}</code>"
   },
   "StatusRAMDetail": {
     "other": "\n  • Total: <code>{{.Total}}</code>\n  • Used: <code>{{.Used}} ({{.Perc}}%)</code>\n  • Free: <code>{{.Free}}</code>"

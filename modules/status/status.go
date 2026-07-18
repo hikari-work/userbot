@@ -227,9 +227,15 @@ func statusHandler(ctx *ext.Context, update *ext.Update) error {
 	goHeapSys := formatBytes(m.HeapSys)
 	goHeapIdle := formatBytes(m.HeapIdle)
 	gcCycles := m.NumGC
+	model, err := getCpuInfo()
+	if err != nil {
+		slog.Error("Error Getting CPU Info", "error", err)
+		model = "N/A"
+	}
 
 	htmlContent := i18n.Localize("StatusMessage", map[string]interface{}{
 		"CPU":         fmt.Sprintf("%.2f", cpuUsage),
+		"CPUModel":    model,
 		"RAM":         ramStr,
 		"Goroutines":  goroutines,
 		"GoAlloc":     goAlloc,
@@ -250,4 +256,30 @@ func statusHandler(ctx *ext.Context, update *ext.Update) error {
 	})
 
 	return err
+}
+func getCpuInfo() (cpuModel string, err error) {
+	open, err := os.Open("/proc/cpuinfo")
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		if closeErr := open.Close(); closeErr != nil {
+			slog.Error("error closing cpuinfo", "error", closeErr)
+		}
+	}()
+
+	scanner := bufio.NewScanner(open)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "model name") {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				return strings.TrimSpace(parts[1]), nil
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+	return "", fmt.Errorf("cpu model name not found")
 }
