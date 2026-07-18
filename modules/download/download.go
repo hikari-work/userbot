@@ -50,7 +50,7 @@ func downloadHandler(ctx *ext.Context, update *ext.Update) error {
 	}
 
 	bgCtx := *ctx
-	bgCtx.Context = context.Background()
+	bgCtx.Context = context.WithoutCancel(bgCtx)
 
 	if isReply {
 		_ = bgCtx.DeleteMessages(uChat.GetID(), []int{message.ID})

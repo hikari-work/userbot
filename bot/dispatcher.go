@@ -27,7 +27,7 @@ func dispatch(ctx context.Context, api *tg.Client, upd tg.UpdateClass) {
 			MsgID:        u.MsgID,
 			IsInline:     false,
 		}
-		handleCallbackQuery(ctx, api, q)
+		handleCallbackQuery(ctx, q)
 
 	case *tg.UpdateInlineBotCallbackQuery:
 		q := &manager.CallbackQuery{
@@ -38,7 +38,7 @@ func dispatch(ctx context.Context, api *tg.Client, upd tg.UpdateClass) {
 			InlineMessageID: u.MsgID,
 			IsInline:        true,
 		}
-		handleCallbackQuery(ctx, api, q)
+		handleCallbackQuery(ctx, q)
 
 	case *tg.UpdateBotInlineSend:
 		slog.Debug("Bot: inline result chosen", "result_id", u.ID)
@@ -69,7 +69,7 @@ func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
 	}
 }
 
-func handleCallbackQuery(ctx context.Context, api *tg.Client, q *manager.CallbackQuery) {
+func handleCallbackQuery(ctx context.Context, q *manager.CallbackQuery) {
 	data := string(q.Data)
 	slog.Debug("Bot: callback query received", "data", data, "is_inline", q.IsInline)
 
