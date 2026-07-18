@@ -41,12 +41,12 @@ func dispatch(ctx context.Context, api *tg.Client, upd tg.UpdateClass) {
 		handleCallbackQuery(ctx, api, q)
 
 	case *tg.UpdateBotInlineSend:
-		slog.Debug("Bot: inline result dipilih", "result_id", u.ID)
+		slog.Debug("Bot: inline result chosen", "result_id", u.ID)
 	}
 }
 
 func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
-	slog.Debug("Bot: inline query diterima", "query", q.Query, "user_id", q.UserID)
+	slog.Debug("Bot: inline query received", "query", q.Query, "user_id", q.UserID)
 
 	handled := false
 	for _, mod := range manager.Registry {
@@ -65,13 +65,13 @@ func handleInlineQuery(ctx context.Context, q *tg.UpdateBotInlineQuery) {
 	}
 
 	if !handled {
-		slog.Debug("Bot: tidak ada modul yang handle inline query", "query", q.Query)
+		slog.Debug("Bot: not available module", "query", q.Query)
 	}
 }
 
 func handleCallbackQuery(ctx context.Context, api *tg.Client, q *manager.CallbackQuery) {
 	data := string(q.Data)
-	slog.Debug("Bot: callback query diterima", "data", data, "is_inline", q.IsInline)
+	slog.Debug("Bot: callback query received", "data", data, "is_inline", q.IsInline)
 
 	prefix := data
 	if idx := strings.Index(data, ":"); idx >= 0 {
@@ -86,7 +86,7 @@ func handleCallbackQuery(ctx context.Context, api *tg.Client, q *manager.Callbac
 			continue
 		}
 		if err := mod.CallbackHandler(ctx, q); err != nil {
-			slog.Error("Bot: error pada CallbackHandler",
+			slog.Error("Bot: error in CallbackHandler",
 				"module", mod.Name,
 				"data", data,
 				"error", err,
@@ -95,7 +95,7 @@ func handleCallbackQuery(ctx context.Context, api *tg.Client, q *manager.Callbac
 		return
 	}
 
-	slog.Warn("Bot: tidak ada modul yang handle callback", "data", data)
+	slog.Warn("Bot: module not found", "data", data)
 	if b := getInstance(); b != nil && b.api != nil {
 		_, _ = b.api.MessagesSetBotCallbackAnswer(ctx, &tg.MessagesSetBotCallbackAnswerRequest{
 			QueryID: q.QueryID,

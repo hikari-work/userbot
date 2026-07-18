@@ -91,13 +91,13 @@ func main() {
 	ctxBg := context.Background()
 	exists, err := dbClient.Redis.Exists(ctxBg, "prefix").Result()
 	if err != nil {
-		slog.Error("Gagal memeriksa key 'prefix' di Redis", "error", err)
+		slog.Error("failed checking key 'prefix' in Redis", "error", err)
 	} else if exists == 0 {
 		err = dbClient.Redis.Set(ctxBg, "prefix", ".", 0).Err()
 		if err != nil {
-			slog.Error("Gagal menyimpan key 'prefix' default ke Redis", "error", err)
+			slog.Error("failed store key 'prefix' default to Redis", "error", err)
 		} else {
-			slog.Info("Key 'prefix' tidak ditemukan di Redis, berhasil menyetel default '.'")
+			slog.Info("key 'prefix' not found in Redis, succeed default '.'")
 		}
 	}
 
@@ -106,7 +106,7 @@ func main() {
 		bot.UserbotClient = client
 		go func() {
 			if err := botClient.Run(context.Background()); err != nil {
-				slog.Error("Bot Companion berhenti", "error", err)
+				slog.Error("bot companion stopped", "error", err)
 			}
 		}()
 	}
@@ -125,7 +125,7 @@ func initHandlers(client *gotgproto.Client) {
 	ctxBg := context.Background()
 	prefixVal, err := dbClient.Redis.Get(ctxBg, "prefix").Result()
 	if err != nil {
-		slog.Warn("Gagal mengambil prefix dari Redis, menggunakan fallback '.'", "error", err)
+		slog.Warn("failed getting prefix from Redis, using fallback '.' instead", "error", err)
 		prefixVal = "."
 	}
 	prefixRunes := []rune(prefixVal)
@@ -178,11 +178,11 @@ func initHandlers(client *gotgproto.Client) {
 		for _, h := range commandHandlers {
 			h.Prefix = runes
 		}
-		slog.Info("Prefix seluruh handler command telah diupdate secara dinamis", "new_prefix", newPrefix)
+		slog.Info("prefix has changed", "new_prefix", newPrefix)
 	}
 }
 func syncDialogs(ctx context.Context, client *gotgproto.Client) {
-	slog.Info("Synchronizing")
+	slog.Info("synchronizing")
 	dialogs, err := client.API().MessagesGetDialogs(ctx, &tg.MessagesGetDialogsRequest{
 		OffsetDate: 0,
 		OffsetID:   0,
@@ -190,14 +190,14 @@ func syncDialogs(ctx context.Context, client *gotgproto.Client) {
 		Limit:      100,
 	})
 	if err != nil {
-		slog.Error("Failed Sync, ", "error", err)
+		slog.Error("failed Sync, ", "error", err)
 		return
 	}
 	switch d := dialogs.(type) {
 	case *tg.MessagesDialogsSlice:
-		slog.Info("Syncronizing peers done", "users", len(d.Users), "chats", len(d.Chats))
+		slog.Info("Synchronizing peers done", "users", len(d.Users), "chats", len(d.Chats))
 	case *tg.MessagesDialogs:
-		slog.Info("Syncronizing peers done", "users", len(d.Users), "chats", len(d.Chats))
+		slog.Info("Synchronizing peers done", "users", len(d.Users), "chats", len(d.Chats))
 
 	}
 

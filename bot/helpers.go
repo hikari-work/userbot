@@ -19,7 +19,7 @@ type Button struct {
 func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]Button) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
-		return fmt.Errorf("bot companion tidak aktif")
+		return fmt.Errorf("bot companion not activated")
 	}
 
 	parsedText, entities := utils.ParseHTML(text)
@@ -45,7 +45,7 @@ func EditBotMessage(peer tg.InputPeerClass, msgID int, text string, rows [][]But
 
 func DeleteMessageWithUserbot(chatID int64, msgID int) error {
 	if UserbotClient == nil {
-		return fmt.Errorf("userbot client tidak terdaftar")
+		return fmt.Errorf("user bot client not registered")
 	}
 
 	ctx := UserbotClient.CreateContext()
@@ -72,7 +72,7 @@ func DeleteMessageWithUserbot(chatID int64, msgID int) error {
 func EditInlineBotMessage(inlineMessageID tg.InputBotInlineMessageIDClass, text string, rows [][]Button) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
-		return fmt.Errorf("bot companion tidak aktif")
+		return fmt.Errorf("bot companion not activated")
 	}
 
 	parsedText, entities := utils.ParseHTML(text)
@@ -98,7 +98,7 @@ func EditInlineBotMessage(inlineMessageID tg.InputBotInlineMessageIDClass, text 
 func AnswerCallbackQuery(ctx context.Context, queryID int64, text string, showAlert bool) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
-		return fmt.Errorf("bot companion tidak aktif")
+		return fmt.Errorf("bot companion not activated")
 	}
 
 	req := &tg.MessagesSetBotCallbackAnswerRequest{
@@ -116,7 +116,7 @@ func AnswerCallbackQuery(ctx context.Context, queryID int64, text string, showAl
 func AnswerInlineQuery(ctx context.Context, queryID int64, results []tg.InputBotInlineResultClass) error {
 	b := getInstance()
 	if b == nil || b.api == nil {
-		return fmt.Errorf("bot companion tidak aktif")
+		return fmt.Errorf("bot companion not activated")
 	}
 
 	_, err := b.api.MessagesSetInlineBotResults(ctx, &tg.MessagesSetInlineBotResultsRequest{

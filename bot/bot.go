@@ -26,7 +26,7 @@ var UserbotClient *gotgproto.Client
 
 func New(cfg *config.Config) *Client {
 	if cfg.BotToken == "" {
-		slog.Warn("BOT_TOKEN tidak diset — Bot Companion dinonaktifkan")
+		slog.Warn("BOT_TOKEN not set — Bot Companion nonactive")
 		return nil
 	}
 
@@ -69,7 +69,7 @@ func (b *Client) Run(ctx context.Context) error {
 		false,
 	)
 	if err != nil {
-		slog.Error("Gagal inisialisasi SQLite session storage untuk bot", "error", err)
+		slog.Error("failed initialize SQLite session storage for bot", "error", err)
 		return err
 	}
 
@@ -85,25 +85,25 @@ func (b *Client) Run(ctx context.Context) error {
 		}
 
 		if !status.Authorized {
-			slog.Info("Bot Companion belum terautentikasi, melakukan login dengan token...")
+			slog.Info("Bot Companion not verified, login with token instead...")
 			auth, err := b.client.Auth().Bot(ctx, b.cfg.BotToken)
 			if err != nil {
 				return err
 			}
 			if u, ok := auth.User.(*tg.User); ok {
 				Username = u.Username
-				slog.Info("Bot Companion login berhasil", "username", Username)
+				slog.Info("Bot Companion login succeed", "username", Username)
 			}
 		} else {
-			slog.Info("Bot Companion berhasil login menggunakan session SQLite lama (tanpa rpc token login)")
+			slog.Info("Bot Companion login succeed")
 			if status.User != nil {
 				Username = status.User.Username
-				slog.Info("Bot Companion username dari session SQLite", "username", Username)
+				slog.Info("Bot Companion username from session SQLite", "username", Username)
 			}
 		}
 
 		b.api = b.client.API()
-		slog.Info("✅ Bot Companion siap menerima updates")
+		slog.Info("✅ Bot Companion ready")
 
 		<-ctx.Done()
 		return ctx.Err()
