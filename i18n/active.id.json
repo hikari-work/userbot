@@ -210,7 +210,7 @@
     "other": "Detail page tidak valid."
   },
   "MenuListText": {
-    "other": "📦 <b>Daftar Modul Userbot</b> (Hal {{.Page}}/{{.Total}})\n\nSilakan pilih modul di bawah untuk melihat detail commands:"
+    "other": "📦 <b>Daftar Modul Userbot</b>\n\nSilakan pilih modul di bawah untuk melihat detail commands:"
   },
   "MenuModuleDetail": {
     "other": "📦 <b>Modul: {{.Name}}</b>\n\nℹ️ <i>{{.Desc}}</i>\n\n<b>Commands:</b>\n{{.Commands}}"

@@ -118,32 +118,13 @@ func getLogicalModules() []LogicalModule {
 
 func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 	logicalMods := getLogicalModules()
-	totalModules := len(logicalMods)
-
-	totalPages := (totalModules + pageSize - 1) / pageSize
-	if totalPages == 0 {
-		totalPages = 1
-	}
-
-	if page < 0 {
-		page = totalPages - 1
-	} else if page >= totalPages {
-		page = 0
-	}
-
-	start := page * pageSize
-	end := start + pageSize
-	if end > totalModules {
-		end = totalModules
-	}
 
 	var modRows [][]bot.Button
 	var currentRow []bot.Button
-	for i := start; i < end; i++ {
-		mod := logicalMods[i]
+	for _, mod := range logicalMods {
 		btn := bot.Button{
 			Text:         mod.Name,
-			CallbackData: fmt.Sprintf("menu:mod:%s:%d:%d", mod.ID, page, chatID),
+			CallbackData: fmt.Sprintf("menu:mod:%s:0:%d", mod.ID, chatID),
 		}
 		currentRow = append(currentRow, btn)
 
@@ -156,20 +137,12 @@ func getModulesPage(page int, chatID int64) (string, [][]bot.Button) {
 		modRows = append(modRows, currentRow)
 	}
 
-	prevPage := page - 1
-	nextPage := page + 1
-
 	navRow := []bot.Button{
-		{Text: i18n.Localize("MenuPrevBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%d:%d", prevPage, chatID)},
 		{Text: i18n.Localize("MenuCloseBtn", nil, nil), CallbackData: fmt.Sprintf("menu:close:%d", chatID)},
-		{Text: i18n.Localize("MenuNextBtn", nil, nil), CallbackData: fmt.Sprintf("menu:page:%d:%d", nextPage, chatID)},
 	}
 	modRows = append(modRows, navRow)
 
-	text := i18n.Localize("MenuListText", map[string]interface{}{
-		"Page":  page + 1,
-		"Total": totalPages,
-	}, nil)
+	text := i18n.Localize("MenuListText", nil, nil)
 
 	return text, modRows
 }

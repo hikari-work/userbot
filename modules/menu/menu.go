@@ -18,7 +18,6 @@ import (
 	"github.com/hikari-work/userbot/utils"
 )
 
-const pageSize = 6
 
 func init() {
 	manager.Register(&manager.Module{

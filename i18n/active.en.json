@@ -210,7 +210,7 @@
     "other": "Invalid page details."
   },
   "MenuListText": {
-    "other": "📦 <b>Userbot Module List</b> (Page {{.Page}}/{{.Total}})\n\nPlease select a module below to see command details:"
+    "other": "📦 <b>Userbot Module List</b>\n\nPlease select a module below to see command details:"
   },
   "MenuModuleDetail": {
     "other": "📦 <b>Module: {{.Name}}</b>\n\nℹ️ <i>{{.Desc}}</i>\n\n<b>Commands:</b>\n{{.Commands}}"
