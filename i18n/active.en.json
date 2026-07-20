@@ -622,6 +622,30 @@
   },
   "SSpamNotSticker": {
     "other": "The replied message is not a sticker."
+  },
+  "PinReplyRequired": {
+    "other": "❌ <b>Please reply to a message to pin.</b>"
+  },
+  "PinSuccess": {
+    "other": "📌 <b>Message pinned successfully!</b>"
+  },
+  "PinFailed": {
+    "other": "❌ <b>Failed to pin message:</b> {{.Error}}"
+  },
+  "UnpinReplyRequired": {
+    "other": "❌ <b>Please reply to a message to unpin, or use <code>.unpin all</code> to unpin all messages.</b>"
+  },
+  "UnpinSuccess": {
+    "other": "📌 <b>Message unpinned successfully!</b>"
+  },
+  "UnpinFailed": {
+    "other": "❌ <b>Failed to unpin message:</b> {{.Error}}"
+  },
+  "UnpinAllSuccess": {
+    "other": "📌 <b>All pinned messages have been unpinned!</b>"
+  },
+  "UnpinAllFailed": {
+    "other": "❌ <b>Failed to unpin all messages:</b> {{.Error}}"
   }
 }
 

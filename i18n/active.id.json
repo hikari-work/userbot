@@ -622,6 +622,30 @@
   },
   "SSpamNotSticker": {
     "other": "Pesan yang dibalas bukan stiker."
+  },
+  "PinReplyRequired": {
+    "other": "❌ <b>Reply ke pesan yang ingin di pin</b>"
+  },
+  "PinSuccess": {
+    "other": "📌 <b>Pesan berhasil disematkan!</b>"
+  },
+  "PinFailed": {
+    "other": "❌ <b>Gagal menyematkan pesan:</b> {{.Error}}"
+  },
+  "UnpinReplyRequired": {
+    "other": "❌ <b>Reply ke pesan yang ingin dilepas sematannya, atau ketik <code>.unpin all</code> untuk melepas semua sematan.</b>"
+  },
+  "UnpinSuccess": {
+    "other": "📌 <b>Pesan berhasil dilepaskan dari sematan!</b>"
+  },
+  "UnpinFailed": {
+    "other": "❌ <b>Gagal melepaskan sematan pesan:</b> {{.Error}}"
+  },
+  "UnpinAllSuccess": {
+    "other": "📌 <b>Semua pesan tersemat berhasil dilepaskan!</b>"
+  },
+  "UnpinAllFailed": {
+    "other": "❌ <b>Gagal melepaskan semua sematan:</b> {{.Error}}"
   }
 }
 
