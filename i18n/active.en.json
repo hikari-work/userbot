@@ -646,6 +646,21 @@
   },
   "UnpinAllFailed": {
     "other": "❌ <b>Failed to unpin all messages:</b> {{.Error}}"
+  },
+  "DelchatSuccess": {
+    "other": "🗑️ <b>Chat deleted / left group successfully.</b>"
+  },
+  "DelchatFailed": {
+    "other": "❌ <b>Failed to delete chat / leave group:</b> {{.Error}}"
+  },
+  "DelmsgSuccess": {
+    "other": "🗑️ <b>Deleted {{.Count}} message(s).</b>"
+  },
+  "DelmsgFailed": {
+    "other": "❌ <b>Failed to delete messages:</b> {{.Error}}"
+  },
+  "DelmsgNoMessages": {
+    "other": "ℹ️ <b>No messages found to delete.</b>"
   }
 }
 

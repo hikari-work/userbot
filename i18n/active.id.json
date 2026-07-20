@@ -646,6 +646,21 @@
   },
   "UnpinAllFailed": {
     "other": "❌ <b>Gagal melepaskan semua sematan:</b> {{.Error}}"
+  },
+  "DelchatSuccess": {
+    "other": "🗑️ <b>Chat berhasil dihapus / keluar dari grup.</b>"
+  },
+  "DelchatFailed": {
+    "other": "❌ <b>Gagal menghapus chat / keluar grup:</b> {{.Error}}"
+  },
+  "DelmsgSuccess": {
+    "other": "🗑️ <b>Berhasil menghapus {{.Count}} pesan.</b>"
+  },
+  "DelmsgFailed": {
+    "other": "❌ <b>Gagal menghapus pesan:</b> {{.Error}}"
+  },
+  "DelmsgNoMessages": {
+    "other": "ℹ️ <b>Tidak ada pesan yang dapat dihapus.</b>"
   }
 }
 

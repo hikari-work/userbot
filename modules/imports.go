@@ -5,6 +5,7 @@ import (
 	_ "github.com/hikari-work/userbot/modules/admins"
 	_ "github.com/hikari-work/userbot/modules/afk"
 	_ "github.com/hikari-work/userbot/modules/antiflood"
+	_ "github.com/hikari-work/userbot/modules/chat"
 	_ "github.com/hikari-work/userbot/modules/download"
 	_ "github.com/hikari-work/userbot/modules/filter"
 	_ "github.com/hikari-work/userbot/modules/json"
