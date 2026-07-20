@@ -679,6 +679,36 @@
   },
   "CreateGroupFailed": {
     "other": "❌ <b>Gagal membuat grup:</b> {{.Error}}"
+  },
+  "JoinGCReplyRequired": {
+    "other": "❌ <b>Reply ke pesan yang berisi setidaknya satu link Telegram.</b>"
+  },
+  "JoinGCNoLinksFound": {
+    "other": "❌ <b>Tidak ada link Telegram yang ditemukan pada pesan yang dibalas.</b>"
+  },
+  "JoinGCProcessing": {
+    "other": "⏳ <b>Proses bergabung link {{.Current}}/{{.Total}}...</b>"
+  },
+  "JoinGCReportTitle": {
+    "other": "🔗 <b>Ringkasan Join Chat</b> (Total: {{.Total}})"
+  },
+  "JoinGCAlreadyMember": {
+    "other": "Sudah menjadi anggota"
+  },
+  "JoinGCRequestSent": {
+    "other": "Permintaan bergabung telah dikirim"
+  },
+  "TagallGroupOnly": {
+    "other": "❌ <b>Perintah ini hanya dapat digunakan di grup atau supergroup.</b>"
+  },
+  "TagallFetching": {
+    "other": "⏳ <b>Mengambil daftar anggota grup...</b>"
+  },
+  "TagallNoMembers": {
+    "other": "❌ <b>Tidak ada anggota yang dapat ditag.</b>"
+  },
+  "TagallHeader": {
+    "other": "📣 <b>Tag Semua Anggota</b>"
   }
 }
 

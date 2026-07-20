@@ -679,6 +679,36 @@
   },
   "CreateGroupFailed": {
     "other": "❌ <b>Failed to create group:</b> {{.Error}}"
+  },
+  "JoinGCReplyRequired": {
+    "other": "❌ <b>Please reply to a message containing Telegram link(s).</b>"
+  },
+  "JoinGCNoLinksFound": {
+    "other": "❌ <b>No Telegram link found in the replied message.</b>"
+  },
+  "JoinGCProcessing": {
+    "other": "⏳ <b>Joining link {{.Current}}/{{.Total}}...</b>"
+  },
+  "JoinGCReportTitle": {
+    "other": "🔗 <b>Join Chat Summary</b> (Total: {{.Total}})"
+  },
+  "JoinGCAlreadyMember": {
+    "other": "Already a member"
+  },
+  "JoinGCRequestSent": {
+    "other": "Join request sent"
+  },
+  "TagallGroupOnly": {
+    "other": "❌ <b>This command can only be used in groups or supergroups.</b>"
+  },
+  "TagallFetching": {
+    "other": "⏳ <b>Fetching group members...</b>"
+  },
+  "TagallNoMembers": {
+    "other": "❌ <b>No members found to tag.</b>"
+  },
+  "TagallHeader": {
+    "other": "📣 <b>Tag All</b>"
   }
 }
 
