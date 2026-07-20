@@ -661,6 +661,24 @@
   },
   "DelmsgNoMessages": {
     "other": "ℹ️ <b>No messages found to delete.</b>"
+  },
+  "CreateChannelUsage": {
+    "other": "Format: <code>.createchannel &lt;title&gt; [public/inviteonly] [@username]</code>"
+  },
+  "CreateGroupUsage": {
+    "other": "Format: <code>.creategroup &lt;title&gt; [public/inviteonly] [@username]</code>"
+  },
+  "CreateChannelSuccess": {
+    "other": "📢 <b>Channel Created Successfully!</b>\n\n<b>Title:</b> {{.Title}}\n<b>Type:</b> {{.Type}}\n<b>Username:</b> {{.Username}}\n<b>Link:</b> {{.Link}}"
+  },
+  "CreateChannelFailed": {
+    "other": "❌ <b>Failed to create channel:</b> {{.Error}}"
+  },
+  "CreateGroupSuccess": {
+    "other": "👥 <b>Group Created Successfully!</b>\n\n<b>Title:</b> {{.Title}}\n<b>Type:</b> {{.Type}}\n<b>Username:</b> {{.Username}}\n<b>Link:</b> {{.Link}}"
+  },
+  "CreateGroupFailed": {
+    "other": "❌ <b>Failed to create group:</b> {{.Error}}"
   }
 }
 

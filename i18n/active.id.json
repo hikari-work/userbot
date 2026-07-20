@@ -661,6 +661,24 @@
   },
   "DelmsgNoMessages": {
     "other": "ℹ️ <b>Tidak ada pesan yang dapat dihapus.</b>"
+  },
+  "CreateChannelUsage": {
+    "other": "Format: <code>.createchannel &lt;nama_channel&gt; [public/inviteonly] [@username]</code>"
+  },
+  "CreateGroupUsage": {
+    "other": "Format: <code>.creategroup &lt;nama_grup&gt; [public/inviteonly] [@username]</code>"
+  },
+  "CreateChannelSuccess": {
+    "other": "📢 <b>Channel Berhasil Dibuat!</b>\n\n<b>Nama:</b> {{.Title}}\n<b>Tipe:</b> {{.Type}}\n<b>Username:</b> {{.Username}}\n<b>Link:</b> {{.Link}}"
+  },
+  "CreateChannelFailed": {
+    "other": "❌ <b>Gagal membuat channel:</b> {{.Error}}"
+  },
+  "CreateGroupSuccess": {
+    "other": "👥 <b>Grup Berhasil Dibuat!</b>\n\n<b>Nama:</b> {{.Title}}\n<b>Tipe:</b> {{.Type}}\n<b>Username:</b> {{.Username}}\n<b>Link:</b> {{.Link}}"
+  },
+  "CreateGroupFailed": {
+    "other": "❌ <b>Gagal membuat grup:</b> {{.Error}}"
   }
 }
 
